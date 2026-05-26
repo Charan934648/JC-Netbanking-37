@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetBanking - Premium Secure Dashboard</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-secondary: #131a30;
+            --bg-card: rgba(30, 41, 73, 0.45);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --gradient-green: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --shadow-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Ambient background glow effects */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 50%, rgba(0, 0, 0, 0) 100%);
+            top: -200px;
+            left: -200px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .ambient-glow-bottom {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.02) 60%, rgba(0, 0, 0, 0) 100%);
+            bottom: -300px;
+            right: -300px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Glassmorphic Container */
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            min-height: 750px;
+            background: rgba(19, 26, 48, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-card);
+            border-radius: 24px;
+            box-shadow: var(--shadow-glow);
+            z-index: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Authentication Page styles */
+        .auth-screen {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        .auth-header {
+            margin-bottom: 30px;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(10, 15, 29, 0.6);
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 15px;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: var(--gradient-primary);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .auth-info-alert {
+            margin-top: 25px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12.5px;
+            color: #93c5fd;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        /* 2FA Step OTP Verification Screen */
+        .otp-screen {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+
+        .otp-digits {
+            display: flex;
+            justify-content: space-between;
+            margin: 25px 0;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            text-align: center;
+            background: rgba(10, 15, 29, 0.8);
+            border: 1px solid var(--border-card);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-weight: 700;
+            outline: none;
+        }
+
+        .otp-input:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Mock Console Notification Banner */
+        .mock-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1e1b4b;
+            border-left: 4px solid var(--accent-purple);
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-width: 380px;
+            z-index: 100;
+            display: none;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        .notification-header {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .notification-body {
+            font-size: 13.5px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .notification-otp {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--accent-emerald);
+            margin-top: 8px;
+        }
+
+        /* Main Dashboard Shell */
+        .dashboard-shell {
+            display: none;
+            flex: 1;
+            flex-direction: row;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background: rgba(15, 23, 42, 0.4);
+            border-right: 1px solid var(--border-card);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-logo {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-weight: 600;
+        }
+
+        .user-profile-badge {
+            margin-top: auto;
+            padding: 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .profile-info {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .profile-name {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .profile-role {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .logout-btn {
+            font-size: 11px;
+            color: var(--accent-rose);
+            cursor: pointer;
+            margin-top: 4px;
+            text-decoration: underline;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            max-height: 750px;
+        }
+
+        .content-header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .content-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* View Panels (Switchable tabs) */
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Glassmorphic Account Balance Cards */
+        .cards-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .bank-card {
+            flex: 1;
+            height: 180px;
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .bank-card.savings {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e1b4b 100%);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+        }
+
+        .bank-card.current {
+            background: linear-gradient(135deg, #701a75 0%, #311042 100%);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+        }
+
+        .bank-card::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            top: -50px;
+            right: -50px;
+        }
+
+        .card-type {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .card-number {
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            margin: 15px 0 5px 0;
+        }
+
+        .card-balance-lbl {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .card-balance {
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Tables & Lists style */
+        .card-widget {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .widget-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13.5px;
+        }
+
+        .data-table th {
+            padding: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-card);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-debit {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--accent-rose);
+        }
+
+        .badge-credit {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+        }
+
+        .badge-type {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            font-size: 9.5px;
+        }
+
+        /* Forms inside Panels */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-full {
+            grid-column: span 2;
+        }
+
+        .form-actions {
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-submit {
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: 8px;
+            padding: 14px 28px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Alerts & Warnings */
+        .limit-alert-box {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #fbcfe8;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .success-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 16px;
+            animation: fadeIn 0.3s ease-out forwards;
+            display: none;
+        }
+
+        .success-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid var(--accent-emerald);
+            color: var(--accent-emerald);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-bottom"></div>
+
+    <!-- Live Two-Factor OTP Dispatch Banner -->
+    <div class="mock-notification" id="otpNotification">
+        <div class="notification-header">🔒 NetBanking 2FA OTP Service</div>
+        <div class="notification-body">A security verification code was generated for login validation:</div>
+        <div class="notification-otp" id="otpNotificationValue">684201</div>
+        <div class="notification-body" style="font-size: 11px; margin-top: 4px; color: var(--text-secondary);">Valid for
+            5 minutes. (Self-copying enabled)</div>
+    </div>
+
+    <div class="app-container">
+
+        <!-- AUTHENTICATION SCREEN -->
+        <section class="auth-screen active" id="authSection">
+            <!-- 1. Password Check Screen -->
+            <div class="auth-card" id="loginCard">
+                <div class="auth-header">
+                    <div class="logo-text">ANTIGRAVITY BANK</div>
+                    <div class="auth-subtitle">Secure NetBanking Terminal Login</div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Username</label>
+                    <input type="text" class="input-field" id="loginUsername" placeholder="e.g. user" value="user">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Password</label>
+                    <input type="password" class="input-field" id="loginPassword" placeholder="••••••••"
+                        value="user123">
+                </div>
+                <button class="btn-primary" onclick="initiateLogin()">Initiate Secure Login</button>
+                <div class="auth-info-alert">
+                    💡 **Testing Account seeds initialized:**<br>
+                    • <b>User Role:</b> Username: <code style="color: #60a5fa;">user</code> / Pass: <code
+                        style="color: #60a5fa;">user123</code><br>
+                    • <b>Admin Role:</b> Username: <code style="color: #a78bfa;">admin</code> / Pass: <code
+                        style="color: #a78bfa;">admin123</code>
+                </div>
+            </div>
+
+            <!-- 2. OTP Code Verification Screen -->
+            <div class="auth-card" id="otpCard" style="display: none;">
+                <div class="auth-header">
+                    <div class="logo-text"
+                        style="color: var(--accent-purple); background: none; -webkit-text-fill-color: initial;">
+                        TWO-FACTOR AUTH</div>
+                    <div class="auth-subtitle">Enter the 6-digit OTP code sent to logs</div>
+                </div>
+                <div class="input-group" style="text-align: center;">
+                    <label class="input-label" style="text-align: center;">6-Digit Security Token</label>
+                    <div class="otp-digits">
+                        <input type="text" class="otp-input" maxlength="1" onkeyup="moveOtpFocus(this, 'otp2')"
+                            id="otp1">
+                        <input type="text" class="otp-input" maxlength="1" onkeyup="moveOtpFocus(this, 'otp3')"
+                            id="otp2">
+                        <input type="text" class="otp-input" maxlength="1" onkeyup="moveOtpFocus(this, 'otp4')"
+                            id="otp3">
+                        <input type="text" class="otp-input" maxlength="1" onkeyup="moveOtpFocus(this, 'otp5')"
+                            id="otp4">
+                        <input type="text" class="otp-input" maxlength="1" onkeyup="moveOtpFocus(this, 'otp6')"
+                            id="otp5">
+                        <input type="text" class="otp-input" maxlength="1" onkeyup="submitOtpOnLast(this)" id="otp6">
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="verifyOtp()"
+                    style="background: var(--gradient-primary); box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);">Verify
+                    & Unlock Account</button>
+            </div>
+        </section>
+
+        <!-- DASHBOARD CONTAINER -->
+        <section class="dashboard-shell" id="dashboardSection">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-logo">ANTIGRAVITY BANK</div>
+                <ul class="nav-menu">
+                    <li class="nav-item active" onclick="switchTab('dashboard', this)" id="nav-dashboard">📊 Dashboard
+                    </li>
+                    <li class="nav-item" onclick="switchTab('transfers', this)" id="nav-transfers">💸 Fund Transfer</li>
+                    <li class="nav-item" onclick="switchTab('bills', this)" id="nav-bills">🧾 Bill Payments</li>
+                    <li class="nav-item" onclick="switchTab('statement', this)" id="nav-statement">📝 Statements</li>
+                    <li class="nav-item" onclick="switchTab('admin', this)" id="nav-admin"
+                        style="display: none; color: #c084fc;">🔑 Admin Console</li>
+                </ul>
+                <div class="user-profile-badge">
+                    <div class="avatar" id="profileAvatar">U</div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="profileName">User Profile</div>
+                        <div class="profile-role" id="profileRole">ROLE_USER</div>
+                        <div class="logout-btn" onclick="logout()">Secure Logout</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="content-area">
+
+                <!-- TAB 1: USER DASHBOARD -->
+                <div class="tab-panel active" id="panel-dashboard">
+                    <div class="content-header">
+                        <div>
+                            <h2 class="content-title">Welcome back, <span id="welcomeUser"
+                                    style="color: #60a5fa;">User</span>!</h2>
+                            <p class="content-subtitle">Account overview, balances, and deposits.</p>
+                        </div>
+                    </div>
+
+                    <!-- Accounts Balance Display -->
+                    <div class="cards-row">
+                        <div class="bank-card savings">
+                            <span class="card-type">SAVINGS ACCOUNT</span>
+                            <span class="card-number" id="savingsCardNumber">3492 0491 82</span>
+                            <div>
+                                <span class="card-balance-lbl">AVAILABLE BALANCE</span>
+                                <div class="card-balance" id="savingsBalance">$10,000.00</div>
+                            </div>
+                        </div>
+                        <div class="bank-card current" id="currentCard" style="opacity: 0.5;">
+                            <span class="card-type">CURRENT ACCOUNT</span>
+                            <span class="card-number" id="currentCardNumber">Unprovisioned</span>
+                            <div>
+                                <span class="card-balance-lbl">AVAILABLE BALANCE</span>
+                                <div class="card-balance" id="currentBalance">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Deposits Widget -->
+                    <div class="card-widget" style="position: relative;">
+                        <div class="success-overlay" id="depositSuccess">
+                            <div class="success-icon">✓</div>
+                            <h3>Cash Deposited Successfully!</h3>
+                            <p style="color: var(--text-secondary); font-size: 13px; margin-top: 8px;">Your account
+                                balance has been updated securely.</p>
+                        </div>
+                        <h3 class="widget-title">Simulated ATM Cash Deposit</h3>
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label class="input-label">Target Account</label>
+                                <select class="input-field" id="depositAccount">
+                                    <option value="savings">Savings Account (Primary)</option>
+                                    <option value="current" id="depositOptCurrent" disabled>Current Account
+                                        (Unprovisioned)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Deposit Amount ($)</label>
+                                <input type="number" class="input-field" id="depositAmount" placeholder="e.g. 500"
+                                    min="1">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-submit" onclick="executeDeposit()">Load Cash Deposit</button>
+                        </div>
+                    </div>
+
+                    <!-- Supplemental Provision Account -->
+                    <div class="card-widget" id="provisionWidget">
+                        <h3 class="widget-title">Provision Additional Accounts</h3>
+                        <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 20px;">
+                            Need business transactions? Instantly provision a supplementary <b>Current Account</b>
+                            preconfigured in the database.
+                        </p>
+                        <button class="btn-submit"
+                            style="background: var(--gradient-green); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);"
+                            onclick="provisionCurrentAccount()">
+                            Provision Current Account
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 2: FUND TRANSFERS -->
+                <div class="tab-panel" id="panel-transfers">
+                    <div class="content-header">
+                        <div>
+                            <h2 class="content-title">Fund Transfer Terminal</h2>
+                            <p class="content-subtitle">Perform instant transfers using IMPS, NEFT, or RTGS channels.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card-widget" style="position: relative;">
+                        <div class="success-overlay" id="transferSuccess">
+                            <div class="success-icon">✓</div>
+                            <h3>Transaction Completed!</h3>
+                            <p id="transferSuccessMsg"
+                                style="color: var(--text-secondary); font-size: 13px; margin-top: 8px; text-align: center; max-width: 400px;">
+                                Funds have been debited and transferred instantly.
+                            </p>
+                        </div>
+                        <h3 class="widget-title">Initiate Secure Transfer</h3>
+
+                        <div class="limit-alert-box">
+                            ℹ️ <b>Bank Transfer Channels & Constraints:</b><br>
+                            • <b>IMPS:</b> Instant 24/7. Maximum limit <b>$5,000,000</b>.<br>
+                            • <b>NEFT:</b> Immediate. Maximum limit <b>$10,000,000</b>.<br>
+                            • <b>RTGS:</b> Large-value. Minimum limit <b>$200,000</b>, Maximum limit <b>$50,000,000</b>.
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label class="input-label">Source Account</label>
+                                <select class="input-field" id="transferSource">
+                                    <option value="savings">Savings Account (Primary)</option>
+                                    <option value="current" id="transferSrcCurrent" disabled>Current Account
+                                        (Unprovisioned)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Target Account Number</label>
+                                <select class="input-field" id="transferTarget">
+                                    <option value="receiver-savings">Default Receiver Account (8392019482) - $5,000
+                                        initial balance</option>
+                                    <option value="custom">Custom Alphanumeric Account...</option>
+                                </select>
+                            </div>
+                            <div class="input-group" id="customTargetGroup" style="display: none; grid-column: span 2;">
+                                <label class="input-label">Enter Custom Target Account (10 Digits)</label>
+                                <input type="text" class="input-field" id="transferTargetCustom"
+                                    placeholder="e.g. 5892019385">
+                            </div>
+                            <script>
+                                document.getElementById('transferTarget').addEventListener('change', function () {
+                                    if (this.value === 'custom') {
+                                        document.getElementById('customTargetGroup').style.display = 'block';
+                                    } else {
+                                        document.getElementById('customTargetGroup').style.display = 'none';
+                                    }
+                                });
+                            </script>
+                            <div class="input-group">
+                                <label class="input-label">Transfer Channel</label>
+                                <select class="input-field" id="transferType">
+                                    <option value="IMPS">IMPS (Instant - Max $5M)</option>
+                                    <option value="NEFT">NEFT (Standard - Max $10M)</option>
+                                    <option value="RTGS">RTGS (Large Value - Min $200k, Max $50M)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Amount ($)</label>
+                                <input type="number" class="input-field" id="transferAmount" placeholder="e.g. 1500"
+                                    min="1">
+                            </div>
+                            <div class="input-group form-full">
+                                <label class="input-label">Description / Remarks</label>
+                                <input type="text" class="input-field" id="transferRemarks"
+                                    placeholder="Rent payment, invoice, gifts...">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-submit" onclick="executeTransfer()">Transfer Funds</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: BILL PAYMENTS -->
+                <div class="tab-panel" id="panel-bills">
+                    <div class="content-header">
+                        <div>
+                            <h2 class="content-title">Mock Bill Payments</h2>
+                            <p class="content-subtitle">Directly settle utility dues from provisioned bank accounts.</p>
+                        </div>
+                    </div>
+
+                    <div class="card-widget" style="position: relative;">
+                        <div class="success-overlay" id="billSuccess">
+                            <div class="success-icon">✓</div>
+                            <h3>Bill Settled Successfully!</h3>
+                            <p id="billSuccessMsg"
+                                style="color: var(--text-secondary); font-size: 13px; margin-top: 8px;">
+                                Bill payment has been debited from your account.
+                            </p>
+                        </div>
+                        <h3 class="widget-title">Utility Dues Settle</h3>
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label class="input-label">Debit Source Account</label>
+                                <select class="input-field" id="billSource">
+                                    <option value="savings">Savings Account (Primary)</option>
+                                    <option value="current" id="billSrcCurrent" disabled>Current Account (Unprovisioned)
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Utility Provider (Biller)</label>
+                                <select class="input-field" id="billProvider">
+                                    <option value="Power Grid Corp">Power Grid Corporation (Electricity)</option>
+                                    <option value="Metro Water Auth">Metro Water Authority (Water Supply)</option>
+                                    <option value="FiberLink Telecom">FiberLink Telecom (Broadband)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Consumer/Customer Number</label>
+                                <input type="text" class="input-field" id="billConsumer"
+                                    placeholder="e.g. ELEC-987654-A">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Dues Amount ($)</label>
+                                <input type="number" class="input-field" id="billAmount" placeholder="e.g. 120" min="1">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-submit" onclick="executeBillPayment()">Pay Bill Securely</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: ACCOUNT STATEMENT -->
+                <div class="tab-panel" id="panel-statement">
+                    <div class="content-header">
+                        <div>
+                            <h2 class="content-title">Transaction Statement</h2>
+                            <p class="content-subtitle">Chronological ledger lists for balance audits.</p>
+                        </div>
+                    </div>
+
+                    <div class="card-widget">
+                        <div class="widget-title">
+                            <span>Account Ledger Records</span>
+                            <span style="font-size: 12px; color: var(--text-secondary);">Real-Time Updates</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ref Code</th>
+                                        <th>Timestamp</th>
+                                        <th>Details</th>
+                                        <th>Channel</th>
+                                        <th>Status</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statementTableBody">
+                                    <!-- Dynamic rows loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: ADMIN SECURITY CONSOLE -->
+                <div class="tab-panel" id="panel-admin">
+                    <div class="content-header">
+                        <div>
+                            <h2 class="content-title" style="color: #a78bfa;">Admin Audit Logging Console</h2>
+                            <p class="content-subtitle">Complete chronological event logs for system-wide auditing.</p>
+                        </div>
+                    </div>
+
+                    <div class="card-widget">
+                        <div class="widget-title">
+                            <span>System Security Audit Trail</span>
+                            <span class="badge" style="background: rgba(167, 139, 250, 0.2); color: #c084fc;">SuperUser
+                                Access</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Security Event</th>
+                                        <th>User</th>
+                                        <th>IP Address</th>
+                                        <th>Timestamp</th>
+                                        <th>Metadata Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditTableBody">
+                                    <!-- Dynamic audit logs generated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </section>
+
+    </div>
+
+    <!-- MAIN JAVASCRIPT STATE CONTROLLER -->
+    <script>
+        // Global variables mimicking backend database structures in memory
+        let sessionUser = null;
+        let accounts = {
+            savings: {
+                accountNumber: "3492049182",
+                balance: 10000.00,
+                type: "SAVINGS",
+                provisioned: true
+            },
+            current: {
+                accountNumber: "Not Provisioned",
+                balance: 0.00,
+                type: "CURRENT",
+                provisioned: false
+            },
+            receiver: {
+                accountNumber: "8392019482",
+                balance: 5000.00,
+                type: "SAVINGS",
+                provisioned: true
+            }
+        };
+
+        let transactions = [
+            {
+                ref: "TXN-9A1B2C3D4E",
+                timestamp: new Date(Date.now() - 3600000 * 2).toLocaleString(),
+                description: "Initial Balance Provisioning",
+                type: "DEPOSIT",
+                status: "SUCCESS",
+                amount: "+$10,000.00",
+                isCredit: true
+            }
+        ];
+
+        let auditLogs = [
+            {
+                id: 1,
+                action: "SYSTEM_STARTUP",
+                user: "SYSTEM",
+                ip: "127.0.0.1",
+                timestamp: new Date(Date.now() - 3600000 * 4).toLocaleString(),
+                details: "NetBanking system initiated. Loaded database configuration details."
+            },
+            {
+                id: 2,
+                action: "DB_SEEDING_COMPLETED",
+                user: "SYSTEM",
+                ip: "127.0.0.1",
+                timestamp: new Date(Date.now() - 3600000 * 4).toLocaleString(),
+                details: "Database pre-seeded with 3 default users (admin, user, receiver)."
+            }
+        ];
+
+        // 2FA OTP Storage
+        let currentOtpCode = "";
+
+        // Trigger custom notification alerts in browser
+        function triggerOtpNotification(otp) {
+            const notif = document.getElementById("otpNotification");
+            const value = document.getElementById("otpNotificationValue");
+            value.innerText = otp;
+            notif.style.display = "block";
+
+            // Auto hide after 15 seconds
+            setTimeout(() => {
+                notif.style.display = "none";
+            }, 15000);
+        }
+
+        // 2FA Steps: Step 1 Initiate Login
+        function initiateLogin() {
+            const userInp = document.getElementById("loginUsername").value.trim();
+            const passInp = document.getElementById("loginPassword").value.trim();
+
+            if (!userInp || !passInp) {
+                alert("Please fill in username and password fields.");
+                return;
+            }
+
+            // Verify basic user check
+            if (userInp === "user" && passInp === "user123") {
+                sessionUser = { username: "user", role: "ROLE_USER" };
+            } else if (userInp === "admin" && passInp === "admin123") {
+                sessionUser = { username: "admin", role: "ROLE_ADMIN" };
+            } else {
+                alert("Invalid username or password. Check seed hints in help block.");
+                logAuditEvent("LOGIN_FAILED", userInp, "Invalid credentials submitted");
+                return;
+            }
+
+            // Successfully matched login credentials - generate 6 digit code
+            currentOtpCode = String(Math.floor(100000 + Math.random() * 900000));
+
+            // Log it in Audit
+            logAuditEvent("LOGIN_INITIATED", sessionUser.username, "Credentials verified, 2FA OTP dispatched to logs");
+
+            // Transition login screen to OTP screen
+            document.getElementById("loginCard").style.display = "none";
+            document.getElementById("otpCard").style.display = "block";
+
+            // Trigger mock dispatcher notification in top-right
+            triggerOtpNotification(currentOtpCode);
+        }
+
+        // Automatic focus moving for OTP digit input blocks
+        function moveOtpFocus(current, nextId) {
+            if (current.value.length === 1) {
+                document.getElementById(nextId).focus();
+            }
+        }
+
+        function submitOtpOnLast(current) {
+            if (current.value.length === 1) {
+                verifyOtp();
+            }
+        }
+
+        // 2FA Steps: Step 2 OTP check
+        function verifyOtp() {
+            // Retrieve OTP value from individual digit inputs
+            const otp1 = document.getElementById("otp1").value.trim();
+            const otp2 = document.getElementById("otp2").value.trim();
+            const otp3 = document.getElementById("otp3").value.trim();
+            const otp4 = document.getElementById("otp4").value.trim();
+            const otp5 = document.getElementById("otp5").value.trim();
+            const otp6 = document.getElementById("otp6").value.trim();
+
+            const userOtp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
+
+            if (userOtp.length !== 6) {
+                alert("Please enter a complete 6-digit OTP code.");
+                return;
+            }
+
+            if (userOtp === currentOtpCode) {
+                // Success OTP
+                logAuditEvent("LOGIN_SUCCESS", sessionUser.username, "Successful 2FA OTP verification, JWT token issued");
+                document.getElementById("otpNotification").style.display = "none";
+                unlockDashboard();
+            } else {
+                alert("Security Error: Invalid or expired OTP verification code.");
+                logAuditEvent("2FA_VERIFICATION_FAILED", sessionUser.username, "Incorrect OTP token code submitted");
+
+                // Clear inputs
+                document.getElementById("otp1").value = "";
+                document.getElementById("otp2").value = "";
+                document.getElementById("otp3").value = "";
+                document.getElementById("otp4").value = "";
+                document.getElementById("otp5").value = "";
+                document.getElementById("otp6").value = "";
+                document.getElementById("otp1").focus();
+            }
+        }
+
+        // Log audit event helper
+        function logAuditEvent(action, user, details) {
+            const id = auditLogs.length + 1;
+            auditLogs.unshift({
+                id: id,
+                action: action,
+                user: user || "SYSTEM",
+                ip: "192.168.1.14",
+                timestamp: new Date().toLocaleString(),
+                details: details
+            });
+            renderAuditLogs();
+        }
+
+        // Transition from Auth panel to Dashboard
+        function unlockDashboard() {
+            document.getElementById("authSection").classList.remove("active");
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("dashboardSection").style.display = "flex";
+
+            // Update UI headers
+            document.getElementById("profileName").innerText = sessionUser.username;
+            document.getElementById("profileRole").innerText = sessionUser.role;
+            document.getElementById("profileAvatar").innerText = sessionUser.username.substring(0, 1).toUpperCase();
+            document.getElementById("welcomeUser").innerText = sessionUser.username;
+
+            // Route Admin views if role allows
+            if (sessionUser.role === "ROLE_ADMIN") {
+                document.getElementById("nav-admin").style.display = "flex";
+                // Auto switch admin to admin panel
+                switchTab('admin', document.getElementById("nav-admin"));
+            } else {
+                document.getElementById("nav-admin").style.display = "none";
+                switchTab('dashboard', document.getElementById("nav-dashboard"));
+            }
+
+            renderDashboard();
+        }
+
+        // Provision supplementary Current Account
+        function provisionCurrentAccount() {
+            accounts.current.accountNumber = "9482019482";
+            accounts.current.balance = 25000.00; // preload with $25k initial
+            accounts.current.provisioned = true;
+
+            // Log database actions
+            logAuditEvent("ACCOUNT_CREATION", sessionUser.username, "Provisioned supplemental CURRENT account 9482019482");
+
+            // Record deposit
+            transactions.unshift({
+                ref: "TXN-" + Math.random().toString(36).substring(2, 11).toUpperCase(),
+                timestamp: new Date().toLocaleString(),
+                description: "Current Account Initial Deposit Provision",
+                type: "DEPOSIT",
+                status: "SUCCESS",
+                amount: "+$25,000.00",
+                isCredit: true
+            });
+
+            // Update selectors
+            document.getElementById("depositOptCurrent").disabled = false;
+            document.getElementById("depositOptCurrent").innerText = "Current Account (9482019482)";
+            document.getElementById("transferSrcCurrent").disabled = false;
+            document.getElementById("transferSrcCurrent").innerText = "Current Account (9482019482)";
+            document.getElementById("billSrcCurrent").disabled = false;
+            document.getElementById("billSrcCurrent").innerText = "Current Account (9482019482)";
+
+            // Transition visual cards
+            const currentCard = document.getElementById("currentCard");
+            currentCard.style.opacity = "1";
+            document.getElementById("currentCardNumber").innerText = "9482 0194 82";
+
+            // Hide the provision block
+            document.getElementById("provisionWidget").style.display = "none";
+
+            renderDashboard();
+            alert("Current Account provisioned successfully with pre-seeded $25,000.00 balance!");
+        }
+
+        // Run Cash Deposits
+        function executeDeposit() {
+            const accSelect = document.getElementById("depositAccount").value;
+            const amountInp = parseFloat(document.getElementById("depositAmount").value);
+
+            if (isNaN(amountInp) || amountInp <= 0) {
+                alert("Please enter a valid positive deposit amount.");
+                return;
+            }
+
+            // Update balance
+            if (accSelect === "savings") {
+                accounts.savings.balance += amountInp;
+            } else if (accSelect === "current") {
+                accounts.current.balance += amountInp;
+            }
+
+            // Create deposit transaction logs
+            const ref = "TXN-" + Math.random().toString(36).substring(2, 11).toUpperCase();
+            transactions.unshift({
+                ref: ref,
+                timestamp: new Date().toLocaleString(),
+                description: "Cash Deposit at simulated ATM",
+                type: "DEPOSIT",
+                status: "SUCCESS",
+                amount: "+$" + amountInp.toFixed(2),
+                isCredit: true
+            });
+
+            logAuditEvent("CASH_DEPOSIT_SUCCESS", sessionUser.username,
+                `Deposited $${amountInp.toFixed(2)} into ${accSelect.toUpperCase()} account. New Balance: $${(accSelect === 'savings' ? accounts.savings.balance : accounts.current.balance).toFixed(2)}`);
+
+            renderDashboard();
+            document.getElementById("depositAmount").value = "";
+
+            // Show success overlay microanimation
+            const overlay = document.getElementById("depositSuccess");
+            overlay.style.display = "flex";
+            setTimeout(() => { overlay.style.display = "none"; }, 3000);
+        }
+
+        // Run Money Transfers (IMPS/NEFT/RTGS) with balance locks and transfer limits checks
+        function executeTransfer() {
+            const sourceSelect = document.getElementById("transferSource").value;
+            const targetSelect = document.getElementById("transferTarget").value;
+            const customTargetVal = document.getElementById("transferTargetCustom").value.trim();
+            const transferType = document.getElementById("transferType").value;
+            const amountInp = parseFloat(document.getElementById("transferAmount").value);
+            const remarks = document.getElementById("transferRemarks").value.trim() || "Fund Transfer";
+
+            if (isNaN(amountInp) || amountInp <= 0) {
+                alert("Please enter a valid transfer amount.");
+                return;
+            }
+
+            // Determine Target account
+            let targetAccountNumber = "8392019482";
+            if (targetSelect === "custom") {
+                if (!customTargetVal || customTargetVal.length !== 10) {
+                    alert("Custom target account number must be precisely a 10-digit number.");
+                    return;
+                }
+                targetAccountNumber = customTargetVal;
+            }
+
+            // Enforce transfer channel limits matching backend rules
+            let limitError = "";
+            if (transferType === "IMPS") {
+                if (amountInp > 5000000) {
+                    limitError = "IMPS transfer limit exceeded. Maximum amount allowed per transaction is $5,000,000.";
+                }
+            } else if (transferType === "NEFT") {
+                if (amountInp > 10000000) {
+                    limitError = "NEFT transfer limit exceeded. Maximum amount allowed per transaction is $10,000,000.";
+                }
+            } else if (transferType === "RTGS") {
+                if (amountInp < 200000) {
+                    limitError = "RTGS minimum limit constraint violated. Minimum amount required is $200,000.";
+                } else if (amountInp > 50000000) {
+                    limitError = "RTGS transfer limit exceeded. Maximum amount allowed per transaction is $50,000,000.";
+                }
+            }
+
+            if (limitError) {
+                alert("Security Limit Constraint:\n" + limitError);
+                logAuditEvent("TRANSFER_FAILED", sessionUser.username, `Transfer rejected: limit constraints violated (${transferType} / $${amountInp})`);
+                return;
+            }
+
+            // Balance Check on source
+            let sourceAccount = (sourceSelect === 'savings') ? accounts.savings : accounts.current;
+            if (sourceAccount.balance < amountInp) {
+                alert(`Insufficient Balance: Your source account has $${sourceAccount.balance.toFixed(2)}, which is insufficient to transfer $${amountInp.toFixed(2)}.`);
+                logAuditEvent("TRANSFER_FAILED", sessionUser.username, `Insufficient funds in source account during transfer attempt`);
+                return;
+            }
+
+            // Lock rows, deduct balance, credit target
+            sourceAccount.balance -= amountInp;
+            if (targetSelect === "receiver-savings") {
+                accounts.receiver.balance += amountInp;
+            }
+
+            // Generate transaction
+            const ref = "TXN-" + Math.random().toString(36).substring(2, 11).toUpperCase();
+            transactions.unshift({
+                ref: ref,
+                timestamp: new Date().toLocaleString(),
+                description: `${remarks} (to ${targetAccountNumber})`,
+                type: transferType,
+                status: "SUCCESS",
+                amount: "-$" + amountInp.toFixed(2),
+                isCredit: false
+            });
+
+            logAuditEvent("TRANSFER_SUCCESS", sessionUser.username,
+                `Transferred $${amountInp.toFixed(2)} via ${transferType} from ${sourceAccount.accountNumber} to ${targetAccountNumber}. Ref Code: ${ref}`);
+
+            renderDashboard();
+
+            // Clear inputs
+            document.getElementById("transferAmount").value = "";
+            document.getElementById("transferRemarks").value = "";
+            if (targetSelect === "custom") {
+                document.getElementById("transferTargetCustom").value = "";
+            }
+
+            // Success overlay microanimation
+            const overlay = document.getElementById("transferSuccess");
+            document.getElementById("transferSuccessMsg").innerText = `Funds of $${amountInp.toFixed(2)} successfully debited from ${sourceAccount.accountNumber} via ${transferType} channel. Ref: ${ref}`;
+            overlay.style.display = "flex";
+            setTimeout(() => { overlay.style.display = "none"; }, 4000);
+        }
+
+        // Execute utility bill payment settling
+        function executeBillPayment() {
+            const sourceSelect = document.getElementById("billSource").value;
+            const biller = document.getElementById("billProvider").value;
+            const consumer = document.getElementById("billConsumer").value.trim();
+            const amountInp = parseFloat(document.getElementById("billAmount").value);
+
+            if (!consumer) {
+                alert("Please enter a consumer reference number.");
+                return;
+            }
+            if (isNaN(amountInp) || amountInp <= 0) {
+                alert("Please enter a valid payment amount.");
+                return;
+            }
+
+            // Balance validation
+            let sourceAccount = (sourceSelect === 'savings') ? accounts.savings : accounts.current;
+            if (sourceAccount.balance < amountInp) {
+                alert(`Insufficient Balance: Source account holds $${sourceAccount.balance.toFixed(2)}, which is insufficient to settle $${amountInp.toFixed(2)}.`);
+                logAuditEvent("BILLPAY_FAILED", sessionUser.username, `Insufficient funds for bill payment to ${biller}`);
+                return;
+            }
+
+            // Deduct balance
+            sourceAccount.balance -= amountInp;
+
+            // Generate transaction
+            const ref = "TXN-" + Math.random().toString(36).substring(2, 11).toUpperCase();
+            transactions.unshift({
+                ref: ref,
+                timestamp: new Date().toLocaleString(),
+                description: `Bill Payment to ${biller} (Consumer Ref: ${consumer})`,
+                type: "BILL_PAYMENT",
+                status: "SUCCESS",
+                amount: "-$" + amountInp.toFixed(2),
+                isCredit: false
+            });
+
+            logAuditEvent("BILLPAY_SUCCESS", sessionUser.username,
+                `Paid bill of $${amountInp.toFixed(2)} to ${biller} from ${sourceAccount.accountNumber}. Ref Code: ${ref}`);
+
+            renderDashboard();
+
+            // Clear inputs
+            document.getElementById("billConsumer").value = "";
+            document.getElementById("billAmount").value = "";
+
+            // Success overlay
+            const overlay = document.getElementById("billSuccess");
+            document.getElementById("billSuccessMsg").innerText = `Settled $${amountInp.toFixed(2)} payment to ${biller} for account ${sourceAccount.accountNumber} successfully.`;
+            overlay.style.display = "flex";
+            setTimeout(() => { overlay.style.display = "none"; }, 3500);
+        }
+
+        // Render functions for state elements
+        function renderDashboard() {
+            // Balances
+            document.getElementById("savingsBalance").innerText = "$" + accounts.savings.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById("currentBalance").innerText = "$" + accounts.current.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            renderStatements();
+            renderAuditLogs();
+        }
+
+        function renderStatements() {
+            const body = document.getElementById("statementTableBody");
+            body.innerHTML = "";
+
+            if (transactions.length === 0) {
+                body.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No ledger records found.</td></tr>`;
+                return;
+            }
+
+            transactions.forEach(tx => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="font-weight: 600; color: #a78bfa;">${tx.ref}</td>
+                    <td style="color: var(--text-secondary);">${tx.timestamp}</td>
+                    <td>${tx.description}</td>
+                    <td><span class="badge badge-type">${tx.type}</span></td>
+                    <td><span class="badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);">SUCCESS</span></td>
+                    <td style="font-weight: 700; text-align: right;" class="${tx.isCredit ? 'badge-credit' : 'badge-debit'}">${tx.amount}</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function renderAuditLogs() {
+            const body = document.getElementById("auditTableBody");
+            body.innerHTML = "";
+
+            auditLogs.forEach(log => {
+                const tr = document.createElement("tr");
+
+                // Colorize actions
+                let actionColor = "#3b82f6";
+                if (log.action.includes("FAILED")) actionColor = "#f43f5e";
+                if (log.action.includes("SUCCESS") || log.action.includes("SEED")) actionColor = "#10b981";
+                if (log.action.includes("CREATION")) actionColor = "#8b5cf6";
+
+                tr.innerHTML = `
+                    <td style="color: var(--text-secondary);">${log.id}</td>
+                    <td style="font-weight: 600; color: ${actionColor};">${log.action}</td>
+                    <td style="font-weight: 500;">${log.user}</td>
+                    <td style="color: var(--text-secondary); font-family: monospace;">${log.ip}</td>
+                    <td style="color: var(--text-secondary); font-size: 12px;">${log.timestamp}</td>
+                    <td style="color: #94a3b8; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${log.details}">${log.details}</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        // Switch panels (tabs) in dashboard sidebar
+        function switchTab(tabId, element) {
+            // Remove active classes
+            document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
+            document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+
+            // Add active classes
+            element.classList.add("active");
+            document.getElementById("panel-" + tabId).classList.add("active");
+
+            // Re-render arrays
+            if (tabId === 'statement') renderStatements();
+            if (tabId === 'admin') renderAuditLogs();
+        }
+
+        // Logout session safely
+        function logout() {
+            logAuditEvent("LOGOUT", sessionUser.username, "User logged out securely, clearing context credentials");
+
+            sessionUser = null;
+            currentOtpCode = "";
+
+            // Reset auth panel views
+            document.getElementById("loginCard").style.display = "block";
+            document.getElementById("otpCard").style.display = "none";
+            document.getElementById("loginPassword").value = "";
+
+            // Reset digit fields
+            document.getElementById("otp1").value = "";
+            document.getElementById("otp2").value = "";
+            document.getElementById("otp3").value = "";
+            document.getElementById("otp4").value = "";
+            document.getElementById("otp5").value = "";
+            document.getElementById("otp6").value = "";
+
+            // Transition
+            document.getElementById("dashboardSection").style.display = "none";
+            document.getElementById("authSection").style.display = "flex";
+            document.getElementById("authSection").classList.add("active");
+        }
+    </script>
+</body>
+
+</html>
