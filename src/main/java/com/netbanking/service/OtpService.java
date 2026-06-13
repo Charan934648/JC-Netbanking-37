@@ -30,11 +30,16 @@ public class OtpService {
 
     @Transactional
     public String generateOtp(String username) {
-        return generateOtp(username, "LOGIN");
+        return generateOtp(username, "LOGIN", OtpDeliveryChannel.EMAIL);
     }
 
     @Transactional
     public String generateOtp(String username, String purpose) {
+        return generateOtp(username, purpose, OtpDeliveryChannel.EMAIL);
+    }
+
+    @Transactional
+    public String generateOtp(String username, String purpose, OtpDeliveryChannel preferredChannel) {
         int number = 100000 + SECURE_RANDOM.nextInt(900000); // 6-digit number
         String otpCode = String.valueOf(number);
 
@@ -48,7 +53,7 @@ public class OtpService {
 
         otpVerificationRepository.save(otpVerification);
 
-        otpNotificationService.sendOtp(username, purpose, otpCode);
+        otpNotificationService.sendOtp(username, purpose, otpCode, preferredChannel);
 
         return otpCode;
     }

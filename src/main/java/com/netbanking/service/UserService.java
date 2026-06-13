@@ -86,7 +86,7 @@ public class UserService {
         }
 
         // Trigger OTP generation and console dispatch
-        String otpCode = otpService.generateOtp(user.getUsername(), "LOGIN");
+        String otpCode = otpService.generateOtp(user.getUsername(), "LOGIN", resolveDeliveryChannel(username));
         
         auditLogService.log("LOGIN_INITIATED", user.getUsername(), ipAddress, "Credentials verified, 2FA OTP triggered");
         return otpCode;
@@ -127,6 +127,15 @@ public class UserService {
             return userRepository.findByPhoneNumber(digitsOnly);
         }
         return userRepository.findByUsername(normalized);
+    }
+
+    private OtpDeliveryChannel resolveDeliveryChannel(String identifier) {
+        String normalized = identifier == null ? "" : identifier.trim();
+        String digitsOnly = normalized.replaceAll("[^0-9]", "");
+        if (digitsOnly.matches("^[0-9]{10,15}$")) {
+            return OtpDeliveryChannel.SMS;
+        }
+        return OtpDeliveryChannel.EMAIL;
     }
 
     private String normalizePhone(String phoneNumber) {

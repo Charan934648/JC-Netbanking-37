@@ -1243,7 +1243,8 @@
                 logAuditEvent("LOGIN_INITIATED", sessionUser.username, "Credentials verified, OTP dispatched by backend");
                 document.getElementById("loginCard").style.display = "none";
                 document.getElementById("otpCard").style.display = "block";
-                triggerOtpNotification(loginResponse.otpCode || "Delivered");
+                const maskedTarget = userInp.includes("@") ? userInp.replace(/(.{2}).+(@.+)/, "$1***$2") : userInp.replace(/.(?=.{4})/g, "*");
+                triggerOtpNotification(loginResponse.otpCode || `Sent to ${maskedTarget}`);
             } catch (error) {
                 alert(error.message);
                 logAuditEvent("LOGIN_FAILED", userInp, error.message);

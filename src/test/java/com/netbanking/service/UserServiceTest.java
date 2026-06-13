@@ -63,7 +63,7 @@ class UserServiceTest {
     void initiateLoginAcceptsUsername() {
         when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("user123", "encoded")).thenReturn(true);
-        when(otpService.generateOtp("user", "LOGIN")).thenReturn("123456");
+        when(otpService.generateOtp("user", "LOGIN", OtpDeliveryChannel.EMAIL)).thenReturn("123456");
 
         String otp = userService.initiateLogin("user", "user123", "127.0.0.1");
 
@@ -75,7 +75,7 @@ class UserServiceTest {
     void initiateLoginAcceptsEmail() {
         when(userRepository.findByEmail("user@jcbank.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("user123", "encoded")).thenReturn(true);
-        when(otpService.generateOtp("user", "LOGIN")).thenReturn("123456");
+        when(otpService.generateOtp("user", "LOGIN", OtpDeliveryChannel.EMAIL)).thenReturn("123456");
 
         String otp = userService.initiateLogin("user@jcbank.com", "user123", "127.0.0.1");
 
@@ -87,7 +87,7 @@ class UserServiceTest {
     void initiateLoginAcceptsPhoneNumber() {
         when(userRepository.findByPhoneNumber("9000000002")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("user123", "encoded")).thenReturn(true);
-        when(otpService.generateOtp("user", "LOGIN")).thenReturn("123456");
+        when(otpService.generateOtp("user", "LOGIN", OtpDeliveryChannel.SMS)).thenReturn("123456");
 
         String otp = userService.initiateLogin("9000000002", "user123", "127.0.0.1");
 
