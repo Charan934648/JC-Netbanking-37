@@ -28,8 +28,16 @@ public class OtpVerification {
     @Column(name = "otp_code", nullable = false)
     private String otpCode;
 
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'LOGIN'")
+    @Builder.Default
+    private String purpose = "LOGIN";
+
     @Column(name = "expiry_time", nullable = false)
     private LocalDateTime expiryTime;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    @Builder.Default
+    private int attempts = 0;
 
     @Builder.Default
     private boolean verified = false;

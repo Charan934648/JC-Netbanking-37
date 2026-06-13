@@ -10,4 +10,7 @@ import java.util.Optional;
 public interface OtpVerificationRepository extends JpaRepository<OtpVerification, Long> {
     Optional<OtpVerification> findTopByUsernameAndOtpCodeAndVerifiedOrderByExpiryTimeDesc(
             String username, String otpCode, boolean verified);
+
+    Optional<OtpVerification> findTopByUsernameAndPurposeAndVerifiedOrderByExpiryTimeDesc(
+            String username, String purpose, boolean verified);
 }

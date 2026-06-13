@@ -4,6 +4,7 @@ import com.netbanking.entity.OtpVerification;
 import com.netbanking.repository.OtpVerificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,43 +20,69 @@ public class OtpService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final OtpVerificationRepository otpVerificationRepository;
+    private final OtpNotificationService otpNotificationService;
+
+    @Value("${app.otp.expiry-minutes:5}")
+    private long expiryMinutes;
+
+    @Value("${app.otp.max-attempts:3}")
+    private int maxAttempts;
 
     @Transactional
     public String generateOtp(String username) {
+        return generateOtp(username, "LOGIN");
+    }
+
+    @Transactional
+    public String generateOtp(String username, String purpose) {
         int number = 100000 + SECURE_RANDOM.nextInt(900000); // 6-digit number
         String otpCode = String.valueOf(number);
 
         OtpVerification otpVerification = OtpVerification.builder()
                 .username(username)
                 .otpCode(otpCode)
-                .expiryTime(LocalDateTime.now().plusMinutes(5)) // Expiration time: 5 minutes
+                .purpose(purpose)
+                .expiryTime(LocalDateTime.now().plusMinutes(expiryMinutes))
                 .verified(false)
                 .build();
 
         otpVerificationRepository.save(otpVerification);
 
-        log.info("OTP generated for user '{}'. Deliver this code through the configured secure channel.", username);
+        otpNotificationService.sendOtp(username, purpose, otpCode);
 
         return otpCode;
     }
 
     @Transactional
     public boolean validateOtp(String username, String otpCode) {
+        return validateOtp(username, otpCode, "LOGIN");
+    }
+
+    @Transactional
+    public boolean validateOtp(String username, String otpCode, String purpose) {
         Optional<OtpVerification> verificationOpt = otpVerificationRepository
-                .findTopByUsernameAndOtpCodeAndVerifiedOrderByExpiryTimeDesc(username, otpCode, false);
+                .findTopByUsernameAndPurposeAndVerifiedOrderByExpiryTimeDesc(username, purpose, false);
 
         if (verificationOpt.isPresent()) {
             OtpVerification verification = verificationOpt.get();
-            if (!verification.isExpired()) {
+            verification.setAttempts(verification.getAttempts() + 1);
+            otpVerificationRepository.save(verification);
+
+            if (verification.getAttempts() > maxAttempts) {
+                log.warn("OTP attempt limit exceeded for user '{}' and purpose '{}'", username, purpose);
+                return false;
+            }
+
+            if (!verification.isExpired() && verification.getOtpCode().equals(otpCode)) {
                 verification.setVerified(true);
                 otpVerificationRepository.save(verification);
-                log.info("OTP verification successful for user '{}'", username);
+                log.info("OTP verification successful for user '{}' and purpose '{}'", username, purpose);
                 return true;
             } else {
-                log.warn("Expired OTP submitted for user '{}'", username);
+                log.warn("Invalid or expired OTP submitted for user '{}' and purpose '{}'", username, purpose);
             }
         } else {
-            log.warn("Invalid OTP submitted for user '{}'", username);
+            log.warn("Invalid OTP submitted for user '{}' and purpose '{}'", username, purpose);
         }
         return false;
     }

@@ -1,9 +1,12 @@
 package com.netbanking.config;
 
+import com.netbanking.entity.Beneficiary;
+import com.netbanking.entity.BeneficiaryStatus;
 import com.netbanking.entity.Account;
 import com.netbanking.entity.Role;
 import com.netbanking.entity.User;
 import com.netbanking.repository.AccountRepository;
+import com.netbanking.repository.BeneficiaryRepository;
 import com.netbanking.repository.UserRepository;
 import com.netbanking.service.AccountNumberGenerator;
 import com.netbanking.service.AuditLogService;
@@ -14,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -23,6 +27,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
+    private final BeneficiaryRepository beneficiaryRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
     private final AccountNumberGenerator accountNumberGenerator;
@@ -82,6 +87,18 @@ public class DataInitializer implements CommandLineRunner {
             accountRepository.save(account2);
             auditLogService.log("USER_SEEDED", "SYSTEM", "127.0.0.1", 
                     "Default User 'receiver' seeded with SAVINGS account " + account2.getAccountNumber());
+
+            Beneficiary receiverBeneficiary = Beneficiary.builder()
+                    .user(user1)
+                    .nickname("Receiver")
+                    .bankName("JC Bank")
+                    .ifscCode("JCBK0123456")
+                    .accountNumber(account2.getAccountNumber())
+                    .status(BeneficiaryStatus.ACTIVE)
+                    .availableAt(LocalDateTime.now())
+                    .verifiedAt(LocalDateTime.now())
+                    .build();
+            beneficiaryRepository.save(receiverBeneficiary);
 
             log.info("=========================================================");
             log.info("JC BANK DB SEEDING COMPLETED:");

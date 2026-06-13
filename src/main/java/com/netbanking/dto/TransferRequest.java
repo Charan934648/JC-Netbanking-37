@@ -22,5 +22,10 @@ public record TransferRequest(
     @Pattern(regexp = "(?i)^(NEFT|IMPS|RTGS)$", message = "Transfer type must be NEFT, IMPS, or RTGS")
     String transferType,
 
+    Long beneficiaryId,
+
+    @Pattern(regexp = "^$|^[0-9]{6}$", message = "OTP code must be a 6-digit number")
+    String otpCode,
+
     String description
 ) {}

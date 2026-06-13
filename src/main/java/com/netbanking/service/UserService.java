@@ -65,8 +65,8 @@ public class UserService {
         return savedUser;
     }
 
-    @Transactional(readOnly = true)
-    public boolean initiateLogin(String username, String password, String ipAddress) {
+    @Transactional
+    public String initiateLogin(String username, String password, String ipAddress) {
         Optional<User> userOpt = userRepository.findByUsername(username);
         
         if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
@@ -81,15 +81,15 @@ public class UserService {
         }
 
         // Trigger OTP generation and console dispatch
-        otpService.generateOtp(username);
+        String otpCode = otpService.generateOtp(username, "LOGIN");
         
         auditLogService.log("LOGIN_INITIATED", username, ipAddress, "Credentials verified, 2FA OTP triggered");
-        return true;
+        return otpCode;
     }
 
     @Transactional
     public String verifyLoginOtp(String username, String otpCode, String ipAddress) {
-        boolean isValid = otpService.validateOtp(username, otpCode);
+        boolean isValid = otpService.validateOtp(username, otpCode, "LOGIN");
         
         if (!isValid) {
             auditLogService.log("2FA_VERIFICATION_FAILED", username, ipAddress, "Incorrect or expired OTP code");

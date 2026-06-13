@@ -845,6 +845,28 @@
                             • <b>RTGS:</b> Large-value. Minimum limit <b>$200,000</b>, Maximum limit <b>$50,000,000</b>.
                         </div>
 
+                        <div class="form-grid" style="margin-bottom: 24px;">
+                            <div class="input-group">
+                                <label class="input-label">Beneficiary Nickname</label>
+                                <input type="text" class="input-field" id="beneficiaryNickname" placeholder="e.g. Receiver">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Beneficiary Bank</label>
+                                <input type="text" class="input-field" id="beneficiaryBank" value="JC Bank">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">IFSC Code</label>
+                                <input type="text" class="input-field" id="beneficiaryIfsc" value="JCBK0123456">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Account Number</label>
+                                <input type="text" class="input-field" id="beneficiaryAccount" placeholder="10-digit account">
+                            </div>
+                            <div class="form-actions form-full">
+                                <button class="btn-submit" onclick="createBeneficiary()">Add Verified Beneficiary</button>
+                            </div>
+                        </div>
+
                         <div class="form-grid">
                             <div class="input-group">
                                 <label class="input-label">Source Account</label>
@@ -855,27 +877,11 @@
                                 </select>
                             </div>
                             <div class="input-group">
-                                <label class="input-label">Target Account Number</label>
+                                <label class="input-label">Approved Beneficiary</label>
                                 <select class="input-field" id="transferTarget">
-                                    <option value="receiver-savings">Default Receiver Account (8392019482) - $5,000
-                                        initial balance</option>
-                                    <option value="custom">Custom Alphanumeric Account...</option>
+                                    <option value="">Add or select an approved beneficiary</option>
                                 </select>
                             </div>
-                            <div class="input-group" id="customTargetGroup" style="display: none; grid-column: span 2;">
-                                <label class="input-label">Enter Custom Target Account (10 Digits)</label>
-                                <input type="text" class="input-field" id="transferTargetCustom"
-                                    placeholder="e.g. 5892019385">
-                            </div>
-                            <script>
-                                document.getElementById('transferTarget').addEventListener('change', function () {
-                                    if (this.value === 'custom') {
-                                        document.getElementById('customTargetGroup').style.display = 'block';
-                                    } else {
-                                        document.getElementById('customTargetGroup').style.display = 'none';
-                                    }
-                                });
-                            </script>
                             <div class="input-group">
                                 <label class="input-label">Transfer Channel</label>
                                 <select class="input-field" id="transferType">
@@ -1086,6 +1092,27 @@
         // 2FA OTP Storage
         let currentOtpCode = "";
         let realtimeEventCount = 0;
+        let authToken = "";
+        let beneficiaries = [];
+        let realtimeSource = null;
+
+        async function apiFetch(path, options = {}) {
+            const headers = {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            };
+            if (authToken) {
+                headers.Authorization = `Bearer ${authToken}`;
+            }
+
+            const response = await fetch(path, { ...options, headers });
+            const text = await response.text();
+            const data = text ? JSON.parse(text) : null;
+            if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Request failed");
+            }
+            return data;
+        }
 
         // Trigger custom notification alerts in browser
         function triggerOtpNotification(otp) {
@@ -1101,7 +1128,7 @@
         }
 
         // 2FA Steps: Step 1 Initiate Login
-        function initiateLogin() {
+        async function initiateLogin() {
             const userInp = document.getElementById("loginUsername").value.trim();
             const passInp = document.getElementById("loginPassword").value.trim();
 
@@ -1110,29 +1137,20 @@
                 return;
             }
 
-            // Verify basic user check
-            if (userInp === "user" && passInp === "user123") {
-                sessionUser = { username: "user", role: "ROLE_USER" };
-            } else if (userInp === "admin" && passInp === "admin123") {
-                sessionUser = { username: "admin", role: "ROLE_ADMIN" };
-            } else {
-                alert("Invalid username or password. Check seed hints in help block.");
-                logAuditEvent("LOGIN_FAILED", userInp, "Invalid credentials submitted");
-                return;
+            try {
+                const loginResponse = await apiFetch("/api/auth/login/initiate", {
+                    method: "POST",
+                    body: JSON.stringify({ username: userInp, password: passInp })
+                });
+                sessionUser = { username: userInp, role: "ROLE_USER" };
+                logAuditEvent("LOGIN_INITIATED", sessionUser.username, "Credentials verified, OTP dispatched by backend");
+                document.getElementById("loginCard").style.display = "none";
+                document.getElementById("otpCard").style.display = "block";
+                triggerOtpNotification(loginResponse.demoOtpCode || "Check server logs");
+            } catch (error) {
+                alert(error.message);
+                logAuditEvent("LOGIN_FAILED", userInp, error.message);
             }
-
-            // Successfully matched login credentials - generate 6 digit code
-            currentOtpCode = String(Math.floor(100000 + Math.random() * 900000));
-
-            // Log it in Audit
-            logAuditEvent("LOGIN_INITIATED", sessionUser.username, "Credentials verified, 2FA OTP dispatched to logs");
-
-            // Transition login screen to OTP screen
-            document.getElementById("loginCard").style.display = "none";
-            document.getElementById("otpCard").style.display = "block";
-
-            // Trigger mock dispatcher notification in top-right
-            triggerOtpNotification(currentOtpCode);
         }
 
         // Automatic focus moving for OTP digit input blocks
@@ -1149,7 +1167,7 @@
         }
 
         // 2FA Steps: Step 2 OTP check
-        function verifyOtp() {
+        async function verifyOtp() {
             // Retrieve OTP value from individual digit inputs
             const otp1 = document.getElementById("otp1").value.trim();
             const otp2 = document.getElementById("otp2").value.trim();
@@ -1165,14 +1183,19 @@
                 return;
             }
 
-            if (userOtp === currentOtpCode) {
-                // Success OTP
+            try {
+                const response = await apiFetch("/api/auth/login/verify", {
+                    method: "POST",
+                    body: JSON.stringify({ username: sessionUser.username, otpCode: userOtp })
+                });
+                authToken = response.token;
+                sessionUser = { username: response.username, role: response.role };
                 logAuditEvent("LOGIN_SUCCESS", sessionUser.username, "Successful 2FA OTP verification, JWT token issued");
                 document.getElementById("otpNotification").style.display = "none";
-                unlockDashboard();
-            } else {
-                alert("Security Error: Invalid or expired OTP verification code.");
-                logAuditEvent("2FA_VERIFICATION_FAILED", sessionUser.username, "Incorrect OTP token code submitted");
+                await unlockDashboard();
+            } catch (error) {
+                alert(error.message);
+                logAuditEvent("2FA_VERIFICATION_FAILED", sessionUser?.username, error.message);
 
                 // Clear inputs
                 document.getElementById("otp1").value = "";
@@ -1208,8 +1231,117 @@
             }
         }
 
+        function formatMoney(value) {
+            return "$" + Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function accountKey(accountType) {
+            return accountType === "CURRENT" ? "current" : "savings";
+        }
+
+        async function refreshBankingData() {
+            const apiAccounts = await apiFetch("/api/accounts");
+            accounts.savings = { accountNumber: "Not Provisioned", balance: 0, type: "SAVINGS", provisioned: false };
+            accounts.current = { accountNumber: "Not Provisioned", balance: 0, type: "CURRENT", provisioned: false };
+
+            apiAccounts.forEach(account => {
+                accounts[accountKey(account.accountType)] = {
+                    accountNumber: account.accountNumber,
+                    balance: Number(account.balance),
+                    type: account.accountType,
+                    provisioned: true
+                };
+            });
+
+            beneficiaries = await apiFetch("/api/beneficiaries");
+            const statementAccount = accounts.savings.provisioned ? accounts.savings : accounts.current;
+            transactions = [];
+            if (statementAccount.provisioned) {
+                const statement = await apiFetch(`/api/accounts/${statementAccount.accountNumber}/statement`);
+                transactions = statement.map(tx => {
+                    const isCredit = tx.targetAccountNumber === statementAccount.accountNumber;
+                    return {
+                        ref: tx.transactionReference,
+                        timestamp: new Date(tx.timestamp).toLocaleString(),
+                        description: tx.description,
+                        type: tx.transferType,
+                        status: tx.status,
+                        amount: `${isCredit ? "+" : "-"}${formatMoney(tx.amount)}`,
+                        isCredit
+                    };
+                });
+            }
+
+            if (sessionUser?.role === "ROLE_ADMIN") {
+                const logs = await apiFetch("/api/admin/logs");
+                auditLogs = logs.map(log => ({
+                    id: log.id,
+                    action: log.action,
+                    user: log.performedBy,
+                    ip: log.ipAddress,
+                    timestamp: new Date(log.timestamp).toLocaleString(),
+                    details: log.details
+                }));
+            }
+
+            renderDashboard();
+            renderBeneficiaries();
+        }
+
+        function renderBeneficiaries() {
+            const select = document.getElementById("transferTarget");
+            if (!select) return;
+            select.innerHTML = `<option value="">Add or select an approved beneficiary</option>`;
+            beneficiaries.filter(item => item.readyForTransfers).forEach(item => {
+                const option = document.createElement("option");
+                option.value = item.id;
+                option.textContent = `${item.nickname} - ${item.accountNumber} (${item.bankName})`;
+                select.appendChild(option);
+            });
+        }
+
+        async function createBeneficiary() {
+            try {
+                const beneficiary = await apiFetch("/api/beneficiaries", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        nickname: document.getElementById("beneficiaryNickname").value.trim(),
+                        bankName: document.getElementById("beneficiaryBank").value.trim(),
+                        ifscCode: document.getElementById("beneficiaryIfsc").value.trim().toUpperCase(),
+                        accountNumber: document.getElementById("beneficiaryAccount").value.trim()
+                    })
+                });
+                document.getElementById("beneficiaryNickname").value = "";
+                document.getElementById("beneficiaryAccount").value = "";
+                await refreshBankingData();
+                alert(`Beneficiary ${beneficiary.nickname} added with status ${beneficiary.status}.`);
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function connectRealtimeStream() {
+            if (!authToken || realtimeSource) return;
+            realtimeSource = new EventSource(`/api/realtime/stream?token=${encodeURIComponent(authToken)}`);
+            realtimeSource.onmessage = async event => {
+                if (event.data) {
+                    markRealtimeEvent("backend event");
+                    await refreshBankingData();
+                }
+            };
+            ["CONNECTED", "ACCOUNT_CREATED", "DEPOSIT_POSTED", "ACCOUNT_DEBITED", "ACCOUNT_CREDITED"].forEach(type => {
+                realtimeSource.addEventListener(type, async event => {
+                    markRealtimeEvent(type.toLowerCase().replaceAll("_", " "));
+                    await refreshBankingData();
+                });
+            });
+            realtimeSource.onerror = () => {
+                markRealtimeEvent("stream reconnecting");
+            };
+        }
+
         // Transition from Auth panel to Dashboard
-        function unlockDashboard() {
+        async function unlockDashboard() {
             document.getElementById("authSection").classList.remove("active");
             document.getElementById("authSection").style.display = "none";
             document.getElementById("dashboardSection").style.display = "flex";
@@ -1230,52 +1362,27 @@
                 switchTab('dashboard', document.getElementById("nav-dashboard"));
             }
 
-            renderDashboard();
+            await refreshBankingData();
+            connectRealtimeStream();
         }
 
         // Provision supplementary Current Account
-        function provisionCurrentAccount() {
-            accounts.current.accountNumber = "9482019482";
-            accounts.current.balance = 25000.00; // preload with $25k initial
-            accounts.current.provisioned = true;
-
-            // Log database actions
-            logAuditEvent("ACCOUNT_CREATION", sessionUser.username, "Provisioned supplemental CURRENT account 9482019482");
-
-            // Record deposit
-            transactions.unshift({
-                ref: "TXN-" + Math.random().toString(36).substring(2, 11).toUpperCase(),
-                timestamp: new Date().toLocaleString(),
-                description: "Current Account Initial Deposit Provision",
-                type: "DEPOSIT",
-                status: "SUCCESS",
-                amount: "+$25,000.00",
-                isCredit: true
-            });
-
-            // Update selectors
-            document.getElementById("depositOptCurrent").disabled = false;
-            document.getElementById("depositOptCurrent").innerText = "Current Account (9482019482)";
-            document.getElementById("transferSrcCurrent").disabled = false;
-            document.getElementById("transferSrcCurrent").innerText = "Current Account (9482019482)";
-            document.getElementById("billSrcCurrent").disabled = false;
-            document.getElementById("billSrcCurrent").innerText = "Current Account (9482019482)";
-
-            // Transition visual cards
-            const currentCard = document.getElementById("currentCard");
-            currentCard.style.opacity = "1";
-            document.getElementById("currentCardNumber").innerText = "9482 0194 82";
-
-            // Hide the provision block
-            document.getElementById("provisionWidget").style.display = "none";
-
-            renderDashboard();
-            markRealtimeEvent("account created");
-            alert("Current Account provisioned successfully with pre-seeded $25,000.00 balance!");
+        async function provisionCurrentAccount() {
+            try {
+                await apiFetch("/api/accounts", {
+                    method: "POST",
+                    body: JSON.stringify({ accountType: "CURRENT", initialBalance: 25000 })
+                });
+                await refreshBankingData();
+                markRealtimeEvent("account created");
+                alert("Current Account provisioned successfully.");
+            } catch (error) {
+                alert(error.message);
+            }
         }
 
         // Run Cash Deposits
-        function executeDeposit() {
+        async function executeDeposit() {
             const accSelect = document.getElementById("depositAccount").value;
             const amountInp = parseFloat(document.getElementById("depositAmount").value);
 
@@ -1284,43 +1391,27 @@
                 return;
             }
 
-            // Update balance
-            if (accSelect === "savings") {
-                accounts.savings.balance += amountInp;
-            } else if (accSelect === "current") {
-                accounts.current.balance += amountInp;
+            try {
+                const account = accounts[accSelect];
+                await apiFetch("/api/accounts/deposit", {
+                    method: "POST",
+                    body: JSON.stringify({ accountNumber: account.accountNumber, amount: amountInp })
+                });
+                await refreshBankingData();
+                markRealtimeEvent("deposit posted");
+                document.getElementById("depositAmount").value = "";
+                const overlay = document.getElementById("depositSuccess");
+                overlay.style.display = "flex";
+                setTimeout(() => { overlay.style.display = "none"; }, 3000);
+            } catch (error) {
+                alert(error.message);
             }
-
-            // Create deposit transaction logs
-            const ref = "TXN-" + Math.random().toString(36).substring(2, 11).toUpperCase();
-            transactions.unshift({
-                ref: ref,
-                timestamp: new Date().toLocaleString(),
-                description: "Cash Deposit at simulated ATM",
-                type: "DEPOSIT",
-                status: "SUCCESS",
-                amount: "+$" + amountInp.toFixed(2),
-                isCredit: true
-            });
-
-            logAuditEvent("CASH_DEPOSIT_SUCCESS", sessionUser.username,
-                `Deposited $${amountInp.toFixed(2)} into ${accSelect.toUpperCase()} account. New Balance: $${(accSelect === 'savings' ? accounts.savings.balance : accounts.current.balance).toFixed(2)}`);
-
-            renderDashboard();
-            markRealtimeEvent("deposit posted");
-            document.getElementById("depositAmount").value = "";
-
-            // Show success overlay microanimation
-            const overlay = document.getElementById("depositSuccess");
-            overlay.style.display = "flex";
-            setTimeout(() => { overlay.style.display = "none"; }, 3000);
         }
 
         // Run Money Transfers (IMPS/NEFT/RTGS) with balance locks and transfer limits checks
-        function executeTransfer() {
+        async function executeTransfer(otpCode = "") {
             const sourceSelect = document.getElementById("transferSource").value;
-            const targetSelect = document.getElementById("transferTarget").value;
-            const customTargetVal = document.getElementById("transferTargetCustom").value.trim();
+            const beneficiaryId = Number(document.getElementById("transferTarget").value);
             const transferType = document.getElementById("transferType").value;
             const amountInp = parseFloat(document.getElementById("transferAmount").value);
             const remarks = document.getElementById("transferRemarks").value.trim() || "Fund Transfer";
@@ -1330,14 +1421,10 @@
                 return;
             }
 
-            // Determine Target account
-            let targetAccountNumber = "8392019482";
-            if (targetSelect === "custom") {
-                if (!customTargetVal || customTargetVal.length !== 10) {
-                    alert("Custom target account number must be precisely a 10-digit number.");
-                    return;
-                }
-                targetAccountNumber = customTargetVal;
+            const beneficiary = beneficiaries.find(item => item.id === beneficiaryId);
+            if (!beneficiary) {
+                alert("Please select an approved beneficiary.");
+                return;
             }
 
             // Enforce transfer channel limits matching backend rules
@@ -1364,54 +1451,51 @@
                 return;
             }
 
-            // Balance Check on source
-            let sourceAccount = (sourceSelect === 'savings') ? accounts.savings : accounts.current;
-            if (sourceAccount.balance < amountInp) {
-                alert(`Insufficient Balance: Your source account has $${sourceAccount.balance.toFixed(2)}, which is insufficient to transfer $${amountInp.toFixed(2)}.`);
-                logAuditEvent("TRANSFER_FAILED", sessionUser.username, `Insufficient funds in source account during transfer attempt`);
-                return;
+            try {
+                const sourceAccount = accounts[sourceSelect];
+                const response = await apiFetch("/api/transfers", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        sourceAccountNumber: sourceAccount.accountNumber,
+                        targetAccountNumber: beneficiary.accountNumber,
+                        amount: amountInp,
+                        transferType,
+                        beneficiaryId,
+                        otpCode,
+                        description: remarks
+                    })
+                });
+
+                if (response.status === "OTP_REQUIRED") {
+                    const enteredOtp = prompt("Enter the transfer OTP from the configured secure channel");
+                    if (enteredOtp) {
+                        await executeTransfer(enteredOtp);
+                    }
+                    return;
+                }
+
+                if (response.status === "PENDING_ADMIN_APPROVAL") {
+                    alert(`Transfer queued for admin approval. Approval ID: ${response.approvalId}`);
+                    markRealtimeEvent("approval pending");
+                } else {
+                    const overlay = document.getElementById("transferSuccess");
+                    document.getElementById("transferSuccessMsg").innerText = `Funds of ${formatMoney(amountInp)} submitted via ${transferType}.`;
+                    overlay.style.display = "flex";
+                    setTimeout(() => { overlay.style.display = "none"; }, 4000);
+                    markRealtimeEvent("transfer settled");
+                }
+
+                document.getElementById("transferAmount").value = "";
+                document.getElementById("transferRemarks").value = "";
+                await refreshBankingData();
+            } catch (error) {
+                alert(error.message);
+                logAuditEvent("TRANSFER_FAILED", sessionUser.username, error.message);
             }
-
-            // Lock rows, deduct balance, credit target
-            sourceAccount.balance -= amountInp;
-            if (targetSelect === "receiver-savings") {
-                accounts.receiver.balance += amountInp;
-            }
-
-            // Generate transaction
-            const ref = "TXN-" + Math.random().toString(36).substring(2, 11).toUpperCase();
-            transactions.unshift({
-                ref: ref,
-                timestamp: new Date().toLocaleString(),
-                description: `${remarks} (to ${targetAccountNumber})`,
-                type: transferType,
-                status: "SUCCESS",
-                amount: "-$" + amountInp.toFixed(2),
-                isCredit: false
-            });
-
-            logAuditEvent("TRANSFER_SUCCESS", sessionUser.username,
-                `Transferred $${amountInp.toFixed(2)} via ${transferType} from ${sourceAccount.accountNumber} to ${targetAccountNumber}. Ref Code: ${ref}`);
-
-            renderDashboard();
-            markRealtimeEvent("transfer settled");
-
-            // Clear inputs
-            document.getElementById("transferAmount").value = "";
-            document.getElementById("transferRemarks").value = "";
-            if (targetSelect === "custom") {
-                document.getElementById("transferTargetCustom").value = "";
-            }
-
-            // Success overlay microanimation
-            const overlay = document.getElementById("transferSuccess");
-            document.getElementById("transferSuccessMsg").innerText = `Funds of $${amountInp.toFixed(2)} successfully debited from ${sourceAccount.accountNumber} via ${transferType} channel. Ref: ${ref}`;
-            overlay.style.display = "flex";
-            setTimeout(() => { overlay.style.display = "none"; }, 4000);
         }
 
         // Execute utility bill payment settling
-        function executeBillPayment() {
+        async function executeBillPayment() {
             const sourceSelect = document.getElementById("billSource").value;
             const biller = document.getElementById("billProvider").value;
             const consumer = document.getElementById("billConsumer").value.trim();
@@ -1426,54 +1510,54 @@
                 return;
             }
 
-            // Balance validation
-            let sourceAccount = (sourceSelect === 'savings') ? accounts.savings : accounts.current;
-            if (sourceAccount.balance < amountInp) {
-                alert(`Insufficient Balance: Source account holds $${sourceAccount.balance.toFixed(2)}, which is insufficient to settle $${amountInp.toFixed(2)}.`);
-                logAuditEvent("BILLPAY_FAILED", sessionUser.username, `Insufficient funds for bill payment to ${biller}`);
-                return;
+            try {
+                const sourceAccount = accounts[sourceSelect];
+                await apiFetch("/api/bills/pay", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        accountNumber: sourceAccount.accountNumber,
+                        billerName: biller,
+                        consumerNumber: consumer,
+                        amount: amountInp
+                    })
+                });
+
+                await refreshBankingData();
+                markRealtimeEvent("bill payment settled");
+                document.getElementById("billConsumer").value = "";
+                document.getElementById("billAmount").value = "";
+                const overlay = document.getElementById("billSuccess");
+                document.getElementById("billSuccessMsg").innerText = `Settled ${formatMoney(amountInp)} payment to ${biller} successfully.`;
+                overlay.style.display = "flex";
+                setTimeout(() => { overlay.style.display = "none"; }, 3500);
+            } catch (error) {
+                alert(error.message);
+                logAuditEvent("BILLPAY_FAILED", sessionUser.username, error.message);
             }
-
-            // Deduct balance
-            sourceAccount.balance -= amountInp;
-
-            // Generate transaction
-            const ref = "TXN-" + Math.random().toString(36).substring(2, 11).toUpperCase();
-            transactions.unshift({
-                ref: ref,
-                timestamp: new Date().toLocaleString(),
-                description: `Bill Payment to ${biller} (Consumer Ref: ${consumer})`,
-                type: "BILL_PAYMENT",
-                status: "SUCCESS",
-                amount: "-$" + amountInp.toFixed(2),
-                isCredit: false
-            });
-
-            logAuditEvent("BILLPAY_SUCCESS", sessionUser.username,
-                `Paid bill of $${amountInp.toFixed(2)} to ${biller} from ${sourceAccount.accountNumber}. Ref Code: ${ref}`);
-
-            renderDashboard();
-            markRealtimeEvent("bill payment settled");
-
-            // Clear inputs
-            document.getElementById("billConsumer").value = "";
-            document.getElementById("billAmount").value = "";
-
-            // Success overlay
-            const overlay = document.getElementById("billSuccess");
-            document.getElementById("billSuccessMsg").innerText = `Settled $${amountInp.toFixed(2)} payment to ${biller} for account ${sourceAccount.accountNumber} successfully.`;
-            overlay.style.display = "flex";
-            setTimeout(() => { overlay.style.display = "none"; }, 3500);
         }
 
         // Render functions for state elements
         function renderDashboard() {
-            // Balances
-            document.getElementById("savingsBalance").innerText = "$" + accounts.savings.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById("currentBalance").innerText = "$" + accounts.current.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById("savingsBalance").innerText = formatMoney(accounts.savings.balance);
+            document.getElementById("currentBalance").innerText = formatMoney(accounts.current.balance);
+            document.getElementById("savingsCardNumber").innerText = accounts.savings.provisioned ? accounts.savings.accountNumber.replace(/(\d{4})(\d{4})(\d{2})/, "$1 $2 $3") : "Unprovisioned";
+            document.getElementById("currentCardNumber").innerText = accounts.current.provisioned ? accounts.current.accountNumber.replace(/(\d{4})(\d{4})(\d{2})/, "$1 $2 $3") : "Unprovisioned";
+
+            const currentReady = accounts.current.provisioned;
+            document.getElementById("currentCard").style.opacity = currentReady ? "1" : "0.5";
+            document.getElementById("depositOptCurrent").disabled = !currentReady;
+            document.getElementById("transferSrcCurrent").disabled = !currentReady;
+            document.getElementById("billSrcCurrent").disabled = !currentReady;
+            if (currentReady) {
+                document.getElementById("depositOptCurrent").innerText = `Current Account (${accounts.current.accountNumber})`;
+                document.getElementById("transferSrcCurrent").innerText = `Current Account (${accounts.current.accountNumber})`;
+                document.getElementById("billSrcCurrent").innerText = `Current Account (${accounts.current.accountNumber})`;
+                document.getElementById("provisionWidget").style.display = "none";
+            }
 
             renderStatements();
             renderAuditLogs();
+            renderBeneficiaries();
         }
 
         function renderStatements() {
@@ -1545,6 +1629,12 @@
 
             sessionUser = null;
             currentOtpCode = "";
+            authToken = "";
+            beneficiaries = [];
+            if (realtimeSource) {
+                realtimeSource.close();
+                realtimeSource = null;
+            }
 
             // Reset auth panel views
             document.getElementById("loginCard").style.display = "block";

@@ -7,6 +7,7 @@ import com.netbanking.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,9 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService userService;
+
+    @Value("${app.otp.demo-response-enabled:true}")
+    private boolean demoOtpResponseEnabled;
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(
@@ -51,11 +55,14 @@ public class AuthController {
             @Valid @RequestBody LoginRequest loginRequest,
             HttpServletRequest request) {
 
-        userService.initiateLogin(loginRequest.username(), loginRequest.password(), request.getRemoteAddr());
+        String otpCode = userService.initiateLogin(loginRequest.username(), loginRequest.password(), request.getRemoteAddr());
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Credentials verified. Please verify the 6-digit OTP code from the configured secure channel.");
         response.put("username", loginRequest.username());
+        if (demoOtpResponseEnabled) {
+            response.put("demoOtpCode", otpCode);
+        }
 
         return ResponseEntity.ok(response);
     }
