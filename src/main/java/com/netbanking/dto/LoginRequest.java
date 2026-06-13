@@ -3,7 +3,7 @@ package com.netbanking.dto;
 import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
-    @NotBlank(message = "Username is required")
+    @NotBlank(message = "Username, email, or phone number is required")
     String username,
 
     @NotBlank(message = "Password is required")

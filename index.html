@@ -668,8 +668,8 @@
                     <div class="auth-subtitle">Real-Time Secure NetBanking Login</div>
                 </div>
                 <div class="input-group">
-                    <label class="input-label">Username</label>
-                    <input type="text" class="input-field" id="loginUsername" placeholder="e.g. user" value="user">
+                    <label class="input-label">Username / Email / Phone</label>
+                    <input type="text" class="input-field" id="loginUsername" placeholder="user, user@jcbank.com, or 9000000002" value="user">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Password</label>
@@ -679,9 +679,9 @@
                 <button class="btn-primary" onclick="initiateLogin()">Initiate Secure Login</button>
                 <div class="auth-info-alert">
                     💡 **Testing Account seeds initialized:**<br>
-                    • <b>User Role:</b> Username: <code style="color: #60a5fa;">user</code> / Pass: <code
+                    • <b>User Role:</b> <code style="color: #60a5fa;">user</code>, <code style="color: #60a5fa;">user@jcbank.com</code>, or <code style="color: #60a5fa;">9000000002</code> / Pass: <code
                         style="color: #60a5fa;">user123</code><br>
-                    • <b>Admin Role:</b> Username: <code style="color: #a78bfa;">admin</code> / Pass: <code
+                    • <b>Admin Role:</b> <code style="color: #a78bfa;">admin</code>, <code style="color: #a78bfa;">admin@jcbank.com</code>, or <code style="color: #a78bfa;">9000000001</code> / Pass: <code
                         style="color: #a78bfa;">admin123</code>
                 </div>
             </div>
@@ -1133,7 +1133,7 @@
             const passInp = document.getElementById("loginPassword").value.trim();
 
             if (!userInp || !passInp) {
-                alert("Please fill in username and password fields.");
+                alert("Please fill in login identifier and password fields.");
                 return;
             }
 

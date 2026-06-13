@@ -37,6 +37,7 @@ public class AuthController {
                 registerRequest.username(),
                 registerRequest.password(),
                 registerRequest.email(),
+                registerRequest.phoneNumber(),
                 Role.ROLE_USER,
                 request.getRemoteAddr()
         );
@@ -45,6 +46,7 @@ public class AuthController {
         response.put("message", "User registered successfully");
         response.put("username", user.getUsername());
         response.put("email", user.getEmail());
+        response.put("phoneNumber", user.getPhoneNumber());
         response.put("role", user.getRole().name());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

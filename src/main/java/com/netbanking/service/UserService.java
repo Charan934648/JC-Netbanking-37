@@ -31,18 +31,23 @@ public class UserService {
     private final AccountNumberGenerator accountNumberGenerator;
 
     @Transactional
-    public User registerUser(String username, String password, String email, Role role, String ipAddress) {
+    public User registerUser(String username, String password, String email, String phoneNumber, Role role, String ipAddress) {
         if (userRepository.existsByUsername(username)) {
             throw new InvalidTransactionException("Username is already taken");
         }
         if (userRepository.existsByEmail(email)) {
             throw new InvalidTransactionException("Email is already registered");
         }
+        String normalizedPhone = normalizePhone(phoneNumber);
+        if (normalizedPhone != null && userRepository.existsByPhoneNumber(normalizedPhone)) {
+            throw new InvalidTransactionException("Phone number is already registered");
+        }
 
         User user = User.builder()
                 .username(username)
                 .password(passwordEncoder.encode(password))
                 .email(email)
+                .phoneNumber(normalizedPhone)
                 .role(role)
                 .enabled(true)
                 .build();
@@ -67,7 +72,7 @@ public class UserService {
 
     @Transactional
     public String initiateLogin(String username, String password, String ipAddress) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        Optional<User> userOpt = findByLoginIdentifier(username);
         
         if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
             auditLogService.log("LOGIN_FAILED", username, ipAddress, "Invalid credentials submitted");
@@ -81,34 +86,52 @@ public class UserService {
         }
 
         // Trigger OTP generation and console dispatch
-        String otpCode = otpService.generateOtp(username, "LOGIN");
+        String otpCode = otpService.generateOtp(user.getUsername(), "LOGIN");
         
-        auditLogService.log("LOGIN_INITIATED", username, ipAddress, "Credentials verified, 2FA OTP triggered");
+        auditLogService.log("LOGIN_INITIATED", user.getUsername(), ipAddress, "Credentials verified, 2FA OTP triggered");
         return otpCode;
     }
 
     @Transactional
     public String verifyLoginOtp(String username, String otpCode, String ipAddress) {
-        boolean isValid = otpService.validateOtp(username, otpCode, "LOGIN");
+        User user = findByLoginIdentifier(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+
+        boolean isValid = otpService.validateOtp(user.getUsername(), otpCode, "LOGIN");
         
         if (!isValid) {
-            auditLogService.log("2FA_VERIFICATION_FAILED", username, ipAddress, "Incorrect or expired OTP code");
+            auditLogService.log("2FA_VERIFICATION_FAILED", user.getUsername(), ipAddress, "Incorrect or expired OTP code");
             throw new InvalidTransactionException("Invalid or expired OTP");
         }
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
         // Generate JWT token
         String token = jwtTokenProvider.generateToken(user.getUsername(), user.getRole().name());
 
-        auditLogService.log("LOGIN_SUCCESS", username, ipAddress, "Successful 2FA verification, JWT token issued");
+        auditLogService.log("LOGIN_SUCCESS", user.getUsername(), ipAddress, "Successful 2FA verification, JWT token issued");
         return token;
     }
 
     @Transactional(readOnly = true)
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
+        return findByLoginIdentifier(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+    }
+
+    private Optional<User> findByLoginIdentifier(String identifier) {
+        String normalized = identifier == null ? "" : identifier.trim();
+        if (normalized.contains("@")) {
+            return userRepository.findByEmail(normalized);
+        }
+        if (normalized.matches("^[0-9]{10,15}$")) {
+            return userRepository.findByPhoneNumber(normalized);
+        }
+        return userRepository.findByUsername(normalized);
+    }
+
+    private String normalizePhone(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.isBlank()) {
+            return null;
+        }
+        return phoneNumber.replaceAll("[^0-9]", "");
     }
 }

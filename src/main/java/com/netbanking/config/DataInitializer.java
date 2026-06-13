@@ -42,6 +42,7 @@ public class DataInitializer implements CommandLineRunner {
                     .username("admin")
                     .password(passwordEncoder.encode("admin123"))
                     .email("admin@jcbank.com")
+                    .phoneNumber("9000000001")
                     .role(Role.ROLE_ADMIN)
                     .enabled(true)
                     .build();
@@ -53,6 +54,7 @@ public class DataInitializer implements CommandLineRunner {
                     .username("user")
                     .password(passwordEncoder.encode("user123"))
                     .email("user@jcbank.com")
+                    .phoneNumber("9000000002")
                     .role(Role.ROLE_USER)
                     .enabled(true)
                     .build();
@@ -73,6 +75,7 @@ public class DataInitializer implements CommandLineRunner {
                     .username("receiver")
                     .password(passwordEncoder.encode("user123"))
                     .email("receiver@jcbank.com")
+                    .phoneNumber("9000000003")
                     .role(Role.ROLE_USER)
                     .enabled(true)
                     .build();
