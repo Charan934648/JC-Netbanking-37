@@ -188,6 +188,32 @@
             text-align: left;
         }
 
+        .auth-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding: 4px;
+            background: rgba(10, 15, 29, 0.5);
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+        }
+
+        .auth-switch button {
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text-secondary);
+            background: transparent;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .auth-switch button.active {
+            color: var(--text-primary);
+            background: var(--gradient-primary);
+        }
+
         /* 2FA Step OTP Verification Screen */
         .otp-screen {
             display: none;
@@ -665,7 +691,11 @@
             <div class="auth-card" id="loginCard">
                 <div class="auth-header">
                     <div class="logo-text">JC BANK</div>
-                    <div class="auth-subtitle">Real-Time Secure NetBanking Login</div>
+                    <div class="auth-subtitle">Real-Time Secure NetBanking</div>
+                </div>
+                <div class="auth-switch">
+                    <button class="active" id="signInTab" onclick="showSignIn()">Sign In</button>
+                    <button id="signUpTab" onclick="showSignUp()">Sign Up</button>
                 </div>
                 <div class="input-group">
                     <label class="input-label">Username / Email / Phone</label>
@@ -682,7 +712,38 @@
                     • <b>User Role:</b> <code style="color: #60a5fa;">user</code>, <code style="color: #60a5fa;">user@jcbank.com</code>, or <code style="color: #60a5fa;">9000000002</code> / Pass: <code
                         style="color: #60a5fa;">user123</code><br>
                     • <b>Admin Role:</b> <code style="color: #a78bfa;">admin</code>, <code style="color: #a78bfa;">admin@jcbank.com</code>, or <code style="color: #a78bfa;">9000000001</code> / Pass: <code
-                        style="color: #a78bfa;">admin123</code>
+                    style="color: #a78bfa;">admin123</code>
+                </div>
+            </div>
+
+            <div class="auth-card" id="signupCard" style="display: none;">
+                <div class="auth-header">
+                    <div class="logo-text">JC BANK</div>
+                    <div class="auth-subtitle">Create Real-Time NetBanking Access</div>
+                </div>
+                <div class="auth-switch">
+                    <button id="signInTabSignup" onclick="showSignIn()">Sign In</button>
+                    <button class="active" id="signUpTabSignup" onclick="showSignUp()">Sign Up</button>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Username</label>
+                    <input type="text" class="input-field" id="signupUsername" placeholder="Choose a username">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Email</label>
+                    <input type="email" class="input-field" id="signupEmail" placeholder="name@example.com">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Phone Number</label>
+                    <input type="tel" class="input-field" id="signupPhone" placeholder="10 to 15 digits">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Password</label>
+                    <input type="password" class="input-field" id="signupPassword" placeholder="Minimum 6 characters">
+                </div>
+                <button class="btn-primary" onclick="registerUser()">Create Account</button>
+                <div class="auth-info-alert">
+                    New users receive a JC Bank savings account automatically. After sign up, sign in with username, email, or phone.
                 </div>
             </div>
 
@@ -1125,6 +1186,47 @@
             setTimeout(() => {
                 notif.style.display = "none";
             }, 15000);
+        }
+
+        function showSignIn() {
+            document.getElementById("loginCard").style.display = "block";
+            document.getElementById("signupCard").style.display = "none";
+            document.getElementById("otpCard").style.display = "none";
+        }
+
+        function showSignUp() {
+            document.getElementById("loginCard").style.display = "none";
+            document.getElementById("signupCard").style.display = "block";
+            document.getElementById("otpCard").style.display = "none";
+        }
+
+        async function registerUser() {
+            const username = document.getElementById("signupUsername").value.trim();
+            const email = document.getElementById("signupEmail").value.trim();
+            const phoneNumber = document.getElementById("signupPhone").value.trim();
+            const password = document.getElementById("signupPassword").value.trim();
+
+            if (!username || !email || !password) {
+                alert("Please enter username, email, and password.");
+                return;
+            }
+
+            try {
+                await apiFetch("/api/auth/register", {
+                    method: "POST",
+                    body: JSON.stringify({ username, email, phoneNumber, password })
+                });
+                document.getElementById("loginUsername").value = email || username;
+                document.getElementById("loginPassword").value = password;
+                document.getElementById("signupUsername").value = "";
+                document.getElementById("signupEmail").value = "";
+                document.getElementById("signupPhone").value = "";
+                document.getElementById("signupPassword").value = "";
+                showSignIn();
+                alert("Account created. Sign in with your username, email, or phone number.");
+            } catch (error) {
+                alert(error.message);
+            }
         }
 
         // 2FA Steps: Step 1 Initiate Login

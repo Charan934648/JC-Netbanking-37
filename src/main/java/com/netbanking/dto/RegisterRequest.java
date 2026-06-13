@@ -18,6 +18,6 @@ public record RegisterRequest(
     @Email(message = "Email must be a valid format")
     String email,
 
-    @Pattern(regexp = "^$|^[0-9]{10,15}$", message = "Phone number must be 10 to 15 digits")
+    @Pattern(regexp = "^$|^[0-9+()\\-\\s]{10,24}$", message = "Phone number must contain 10 to 15 digits")
     String phoneNumber
 ) {}
