@@ -20,8 +20,12 @@ public class ConsoleOtpNotificationService implements OtpNotificationService {
     @Override
     public void sendOtp(String username, String purpose, String otpCode) {
         if ("email".equalsIgnoreCase(deliveryProvider) && smtpOtpNotificationService.isConfigured()) {
-            smtpOtpNotificationService.sendOtp(username, purpose, otpCode);
-            return;
+            try {
+                smtpOtpNotificationService.sendOtp(username, purpose, otpCode);
+                return;
+            } catch (RuntimeException ex) {
+                log.warn("Email OTP delivery failed for user '{}'. Falling back to secure server log delivery.", username, ex);
+            }
         }
 
         log.info("JC Bank {} OTP for user '{}': {}", purpose, username, otpCode);

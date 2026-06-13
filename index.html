@@ -1164,7 +1164,8 @@
             const text = await response.text();
             const data = text ? JSON.parse(text) : null;
             if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Request failed");
+                const validationErrors = data?.errors ? Object.values(data.errors).join(", ") : "";
+                throw new Error(data?.message || validationErrors || data?.error || "Request failed");
             }
             return data;
         }
