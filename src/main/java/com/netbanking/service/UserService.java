@@ -122,8 +122,9 @@ public class UserService {
         if (normalized.contains("@")) {
             return userRepository.findByEmail(normalized);
         }
-        if (normalized.matches("^[0-9]{10,15}$")) {
-            return userRepository.findByPhoneNumber(normalized);
+        String digitsOnly = normalized.replaceAll("[^0-9]", "");
+        if (digitsOnly.matches("^[0-9]{10,15}$")) {
+            return userRepository.findByPhoneNumber(digitsOnly);
         }
         return userRepository.findByUsername(normalized);
     }
