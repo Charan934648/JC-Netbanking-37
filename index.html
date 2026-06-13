@@ -678,9 +678,9 @@
     <div class="mock-notification" id="otpNotification">
         <div class="notification-header">🔒 JC Bank 2FA OTP Service</div>
         <div class="notification-body">A security verification code was generated for login validation:</div>
-        <div class="notification-otp" id="otpNotificationValue">684201</div>
+        <div class="notification-otp" id="otpNotificationValue">Delivered</div>
         <div class="notification-body" style="font-size: 11px; margin-top: 4px; color: var(--text-secondary);">Valid for
-            5 minutes. (Self-copying enabled)</div>
+            5 minutes.</div>
     </div>
 
     <div class="app-container">
@@ -699,21 +699,15 @@
                 </div>
                 <div class="input-group">
                     <label class="input-label">Username / Email / Phone</label>
-                    <input type="text" class="input-field" id="loginUsername" placeholder="user, user@jcbank.com, or 9000000002" value="user">
+                    <input type="text" class="input-field" id="loginUsername" placeholder="Username, email, or phone">
                 </div>
                 <div class="input-group">
                     <label class="input-label">Password</label>
                     <input type="password" class="input-field" id="loginPassword" placeholder="••••••••"
-                        value="user123">
+                        >
                 </div>
                 <button class="btn-primary" onclick="initiateLogin()">Initiate Secure Login</button>
-                <div class="auth-info-alert">
-                    💡 **Testing Account seeds initialized:**<br>
-                    • <b>User Role:</b> <code style="color: #60a5fa;">user</code>, <code style="color: #60a5fa;">user@jcbank.com</code>, or <code style="color: #60a5fa;">9000000002</code> / Pass: <code
-                        style="color: #60a5fa;">user123</code><br>
-                    • <b>Admin Role:</b> <code style="color: #a78bfa;">admin</code>, <code style="color: #a78bfa;">admin@jcbank.com</code>, or <code style="color: #a78bfa;">9000000001</code> / Pass: <code
-                    style="color: #a78bfa;">admin123</code>
-                </div>
+                <div class="auth-info-alert">Use your registered username, email, or phone number. A one-time password will be delivered through the configured secure channel.</div>
             </div>
 
             <div class="auth-card" id="signupCard" style="display: none;">
@@ -1032,7 +1026,7 @@
                     <div class="card-widget">
                         <div class="widget-title">
                             <span>Account Ledger Records</span>
-                            <span id="realtimeStatus" style="font-size: 12px; color: var(--accent-emerald);">Live demo mode</span>
+                            <span id="realtimeStatus" style="font-size: 12px; color: var(--accent-emerald);">Live</span>
                         </div>
                         <div class="table-responsive">
                             <table class="data-table">
@@ -1248,7 +1242,7 @@
                 logAuditEvent("LOGIN_INITIATED", sessionUser.username, "Credentials verified, OTP dispatched by backend");
                 document.getElementById("loginCard").style.display = "none";
                 document.getElementById("otpCard").style.display = "block";
-                triggerOtpNotification(loginResponse.demoOtpCode || "Check server logs");
+                triggerOtpNotification(loginResponse.otpCode || "Delivered");
             } catch (error) {
                 alert(error.message);
                 logAuditEvent("LOGIN_FAILED", userInp, error.message);

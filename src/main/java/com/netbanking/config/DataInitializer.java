@@ -13,6 +13,7 @@ import com.netbanking.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -32,15 +33,35 @@ public class DataInitializer implements CommandLineRunner {
     private final AuditLogService auditLogService;
     private final AccountNumberGenerator accountNumberGenerator;
 
+    @Value("${app.bootstrap.sample-users:false}")
+    private boolean bootstrapSampleUsers;
+
+    @Value("${app.bootstrap.admin-password:}")
+    private String bootstrapAdminPassword;
+
+    @Value("${app.bootstrap.user-password:}")
+    private String bootstrapUserPassword;
+
     @Override
     public void run(String... args) throws Exception {
+        if (!bootstrapSampleUsers) {
+            log.info("Sample user bootstrap is disabled. Start with Sign Up to create users.");
+            return;
+        }
+
         if (userRepository.count() == 0) {
             log.info("No users found in database. Initializing default JC Bank users...");
+
+            if (bootstrapAdminPassword == null || bootstrapAdminPassword.isBlank()
+                    || bootstrapUserPassword == null || bootstrapUserPassword.isBlank()) {
+                log.warn("Sample user bootstrap requested, but bootstrap passwords are not configured.");
+                return;
+            }
 
             // 1. Seed Admin
             User admin = User.builder()
                     .username("admin")
-                    .password(passwordEncoder.encode("admin123"))
+                    .password(passwordEncoder.encode(bootstrapAdminPassword))
                     .email("admin@jcbank.com")
                     .phoneNumber("9000000001")
                     .role(Role.ROLE_ADMIN)
@@ -52,7 +73,7 @@ public class DataInitializer implements CommandLineRunner {
             // 2. Seed Standard User 1
             User user1 = User.builder()
                     .username("user")
-                    .password(passwordEncoder.encode("user123"))
+                    .password(passwordEncoder.encode(bootstrapUserPassword))
                     .email("user@jcbank.com")
                     .phoneNumber("9000000002")
                     .role(Role.ROLE_USER)
@@ -73,7 +94,7 @@ public class DataInitializer implements CommandLineRunner {
             // 3. Seed Standard User 2 (for transfers)
             User user2 = User.builder()
                     .username("receiver")
-                    .password(passwordEncoder.encode("user123"))
+                    .password(passwordEncoder.encode(bootstrapUserPassword))
                     .email("receiver@jcbank.com")
                     .phoneNumber("9000000003")
                     .role(Role.ROLE_USER)
@@ -105,10 +126,10 @@ public class DataInitializer implements CommandLineRunner {
 
             log.info("=========================================================");
             log.info("JC BANK DB SEEDING COMPLETED:");
-            log.info("  1. Admin Account: Username: admin / Password: admin123");
-            log.info("  2. User Account:  Username: user  / Password: user123");
+            log.info("  1. Admin Account: Username: admin");
+            log.info("  2. User Account:  Username: user");
             log.info("     Account Number: {} | Initial Balance: 10000.00", account1.getAccountNumber());
-            log.info("  3. User Account:  Username: receiver / Password: user123");
+            log.info("  3. User Account:  Username: receiver");
             log.info("     Account Number: {} | Initial Balance: 5000.00", account2.getAccountNumber());
             log.info("=========================================================");
         } else {

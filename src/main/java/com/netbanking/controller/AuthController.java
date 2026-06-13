@@ -25,8 +25,8 @@ public class AuthController {
 
     private final UserService userService;
 
-    @Value("${app.otp.demo-response-enabled:true}")
-    private boolean demoOtpResponseEnabled;
+    @Value("${app.otp.response-code-enabled:false}")
+    private boolean otpResponseCodeEnabled;
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(
@@ -62,8 +62,8 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
         response.put("message", "Credentials verified. Please verify the 6-digit OTP code from the configured secure channel.");
         response.put("username", loginRequest.username());
-        if (demoOtpResponseEnabled) {
-            response.put("demoOtpCode", otpCode);
+        if (otpResponseCodeEnabled) {
+            response.put("otpCode", otpCode);
         }
 
         return ResponseEntity.ok(response);
