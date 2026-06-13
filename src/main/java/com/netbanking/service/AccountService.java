@@ -22,6 +22,7 @@ public class AccountService {
     private final TransactionRepository transactionRepository;
     private final AuditLogService auditLogService;
     private final AccountNumberGenerator accountNumberGenerator;
+    private final RealtimeNotificationService realtimeNotificationService;
 
     @Transactional(readOnly = true)
     public Account getAccountByNumber(String accountNumber) {
@@ -75,6 +76,12 @@ public class AccountService {
                 String.format("Created new %s account %s with initial balance %s",
                         accountType, savedAccount.getAccountNumber(), initialBalance));
 
+        realtimeNotificationService.publishAccountCreated(
+                user.getUsername(),
+                savedAccount.getAccountNumber(),
+                savedAccount.getBalance()
+        );
+
         return savedAccount;
     }
 
@@ -107,11 +114,19 @@ public class AccountService {
                 .status(TransactionStatus.SUCCESS)
                 .description("Cash Deposit")
                 .build();
-        transactionRepository.save(transaction);
+        Transaction savedTransaction = transactionRepository.save(transaction);
 
         auditLogService.log("CASH_DEPOSIT_SUCCESS", account.getUser().getUsername(), ipAddress,
                 String.format("Deposited %s into account %s. New Balance: %s",
                         amount, accountNumber, updatedAccount.getBalance()));
+
+        realtimeNotificationService.publishDeposit(
+                account.getUser().getUsername(),
+                updatedAccount.getAccountNumber(),
+                updatedAccount.getBalance(),
+                amount,
+                savedTransaction.getTransactionReference()
+        );
 
         return updatedAccount;
     }

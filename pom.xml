@@ -14,7 +14,7 @@
     <name>netbanking</name>
     <description>Secure NetBanking Application in Java using Spring Boot</description>
     <properties>
-        <java.version>25</java.version>
+        <java.version>17</java.version>
     </properties>
     <dependencies>
         <dependency>

@@ -19,6 +19,7 @@ public class BillPaymentService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final AuditLogService auditLogService;
+    private final RealtimeNotificationService realtimeNotificationService;
 
     @Transactional(rollbackFor = Exception.class)
     public Transaction payBill(
@@ -79,6 +80,15 @@ public class BillPaymentService {
         auditLogService.log("BILLPAY_SUCCESS", username, ipAddress,
                 String.format("Paid bill of %s to %s from %s. Ref: %s",
                         amount, billerName, accountNumber, savedTransaction.getTransactionReference()));
+
+        realtimeNotificationService.publishDebit(
+                account.getUser().getUsername(),
+                account.getAccountNumber(),
+                account.getBalance(),
+                amount,
+                TransferType.BILL_PAYMENT.name(),
+                savedTransaction.getTransactionReference()
+        );
 
         return savedTransaction;
     }

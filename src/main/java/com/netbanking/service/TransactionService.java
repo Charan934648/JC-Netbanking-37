@@ -22,6 +22,7 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final AuditLogService auditLogService;
+    private final RealtimeNotificationService realtimeNotificationService;
 
     @Transactional(rollbackFor = Exception.class)
     public Transaction transferFunds(
@@ -96,6 +97,23 @@ public class TransactionService {
         auditLogService.log("TRANSFER_SUCCESS", username, ipAddress,
                 String.format("Transferred %s via %s from %s to %s. Ref: %s",
                         amount, transferType, sourceAccountNumber, targetAccountNumber, savedTransaction.getTransactionReference()));
+
+        realtimeNotificationService.publishDebit(
+                sourceAccount.getUser().getUsername(),
+                sourceAccount.getAccountNumber(),
+                sourceAccount.getBalance(),
+                amount,
+                transferType.name(),
+                savedTransaction.getTransactionReference()
+        );
+        realtimeNotificationService.publishCredit(
+                targetAccount.getUser().getUsername(),
+                targetAccount.getAccountNumber(),
+                targetAccount.getBalance(),
+                amount,
+                transferType.name(),
+                savedTransaction.getTransactionReference()
+        );
 
         return savedTransaction;
     }

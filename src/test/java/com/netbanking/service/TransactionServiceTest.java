@@ -31,6 +31,9 @@ public class TransactionServiceTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private RealtimeNotificationService realtimeNotificationService;
+
     @InjectMocks
     private TransactionService transactionService;
 
@@ -112,6 +115,8 @@ public class TransactionServiceTest {
         verify(accountRepository, times(1)).save(targetAccount);
         verify(transactionRepository, times(1)).save(any(Transaction.class));
         verify(auditLogService, times(1)).log(eq("TRANSFER_SUCCESS"), any(), any(), any());
+        verify(realtimeNotificationService, times(1)).publishDebit(eq("user1"), eq("1111111111"), any(), eq(amount), eq("IMPS"), eq("TXN-123456"));
+        verify(realtimeNotificationService, times(1)).publishCredit(eq("user2"), eq("2222222222"), any(), eq(amount), eq("IMPS"), eq("TXN-123456"));
     }
 
     @Test

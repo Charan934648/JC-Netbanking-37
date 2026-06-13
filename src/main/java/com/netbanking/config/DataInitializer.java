@@ -30,13 +30,13 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (userRepository.count() == 0) {
-            log.info("No users found in database. Initializing default NetBanking users...");
+            log.info("No users found in database. Initializing default JC Bank users...");
 
             // 1. Seed Admin
             User admin = User.builder()
                     .username("admin")
                     .password(passwordEncoder.encode("admin123"))
-                    .email("admin@netbanking.com")
+                    .email("admin@jcbank.com")
                     .role(Role.ROLE_ADMIN)
                     .enabled(true)
                     .build();
@@ -47,7 +47,7 @@ public class DataInitializer implements CommandLineRunner {
             User user1 = User.builder()
                     .username("user")
                     .password(passwordEncoder.encode("user123"))
-                    .email("user@netbanking.com")
+                    .email("user@jcbank.com")
                     .role(Role.ROLE_USER)
                     .enabled(true)
                     .build();
@@ -67,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
             User user2 = User.builder()
                     .username("receiver")
                     .password(passwordEncoder.encode("user123"))
-                    .email("receiver@netbanking.com")
+                    .email("receiver@jcbank.com")
                     .role(Role.ROLE_USER)
                     .enabled(true)
                     .build();
@@ -84,7 +84,7 @@ public class DataInitializer implements CommandLineRunner {
                     "Default User 'receiver' seeded with SAVINGS account " + account2.getAccountNumber());
 
             log.info("=========================================================");
-            log.info("NETBANKING DB SEEDING COMPLETED:");
+            log.info("JC BANK DB SEEDING COMPLETED:");
             log.info("  1. Admin Account: Username: admin / Password: admin123");
             log.info("  2. User Account:  Username: user  / Password: user123");
             log.info("     Account Number: {} | Initial Balance: 10000.00", account1.getAccountNumber());
